@@ -55,7 +55,13 @@ Whether you're reviewing someone's GitHub, reading articles, or prepping for int
 ## 🛠️ Setup (Dev Mode)
 
 ```bash
+GROQ_API_KEY = "Enter Your Groq Api Key Here"
+```
+```bash
 git clone https://github.com/Rudrajiii/Big-O-wl.git
 cd Big-O-wl
 npm install
 npm run dev
+```
+
+
