@@ -2,13 +2,11 @@
   <img src="src/assets/Big(O)wl.png" alt="Big(O)wl Logo" width="150" />
 </p>
 
-<h1 align="center">Big(O)wl 🦉</h1>
-
-<p align="center">
+<div align="center">
+  <h1 align="center">Big(O)wl 🦉</h1>
   <em>Know the Big O before your code says Uh-oh!</em><br/>
   <strong>A Chrome Extension to instantly analyze your code's Time & Space Complexity</strong>
-</p>
-
+</div>
 
 
 ## ⚡ What is Big(O)wl?
