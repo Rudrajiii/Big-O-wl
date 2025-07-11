@@ -1,12 +1,61 @@
-# React + Vite
+<p align="center">
+  <img src="src/assets/Big(O)wl.png" alt="Big(O)wl Logo" width="150" />
+</p>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<h1 align="center">🦉 Big(O)wl</h1>
 
-Currently, two official plugins are available:
+<p align="center">
+  <em>Know the Big O before your code says Uh-oh!</em><br/>
+  <strong>A Chrome Extension to instantly analyze your code's Time & Space Complexity</strong>
+</p>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## ⚡ What is Big(O)wl?
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+> **Big(O)wl** is a Gen-Z-coded Chrome Extension that lets you select/highlight any code on a webpage and instantly tells you the **Time Complexity** and **Space Complexity** along with the Plot for Visualization — powered by AI.  
+Whether you're reviewing someone's GitHub, reading articles, or prepping for interviews in damn LEET CODE, this extension has your back.
+
+---
+
+## 🤔 Why Big(O)wl ?
+> [!IMPORTANT] 
+> Got this idea from Leetcode's Analyze Complexity feature which gives you the complexity analysis of your code along with the Plot, But **for the non-premium users this feature is available only for once at a day**. So In the other hand **Big(O)wl** provides it for free as much as you want with more analytical features.  
+
+---
+
+## 🧠 Features
+
+- 🔍 **Highlight-to-Analyze**  
+  Just select code like you’re copying it — and boom, it appears in the extension popup.
+
+- 🚀 **One-Click Complexity Detection**  
+  Uses the Groq LLM API to give instant insights into Big-O time & space complexity.
+
+- 📈 **Visual Complexity Graphs**  
+  Dynamic plots of common complexity curves with your selected one highlighted in style.
+
+- 📦 **Minimal, Clean, Fast**  
+  Built with React 18, Vite, and SCSS for a blazing fast UX.
+
+- 🧠 **Smart Filtering**  
+  Ignores non-code or unrelated code (like API/server/infra), keeping the output relevant to DSA problems only.
+
+---
+
+## 🧰 Tech Stack
+
+| Frontend | Analysis | Graph |
+|----------|----------|-------|
+| React 18 | Groq LLM | Recharts |
+| SCSS     | MathJax  | SVG Magic |
+
+---
+
+## 🛠️ Setup (Dev Mode)
+
+```bash
+git clone https://github.com/Rudrajiii/Big-O-wl.git
+cd Big-O-wl
+npm install
+npm run dev
