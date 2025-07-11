@@ -14,8 +14,8 @@
 Whether you're reviewing someone's GitHub, reading articles, or prepping for interviews in damn LEET CODE, this extension has your back.
 
 <div align="center">
-  <img width="300" height="300" alt="image" src="https://github.com/user-attachments/assets/c82d442e-0be2-4019-898d-cc3b7c18dad1" />
-<img width="300" height="300" alt="image" src="https://github.com/user-attachments/assets/8be59259-bd54-4788-a30d-62045b6c82ad" />
+  <img width="300" height="400" alt="image" src="https://github.com/user-attachments/assets/c82d442e-0be2-4019-898d-cc3b7c18dad1" />
+<img width="300" height="400" alt="image" src="https://github.com/user-attachments/assets/8be59259-bd54-4788-a30d-62045b6c82ad" />
 </div>
 
 ## 🤔 Why Big(O)wl ?
