@@ -1,0 +1,25 @@
+on-lyfans-extension/
+├── public/
+│   └── icons/                  # All icon sizes
+│
+├── src/
+│   ├── popup/
+│   │   ├── App.jsx             # Main popup component
+│   │   └── index.jsx           # React entry for popup
+│   ├── content/
+│   │   └── index.js            # Content script injected into webpages
+│   ├── background/
+│   │   └── index.js            # Background script (service worker)
+│   ├── utils/
+│   │   └── analyzeCode.js      # API helper for complexity analysis
+│   └── components/
+│       └── ResultCard.jsx      # Optional reusable UI components
+│
+├── icons/
+│   └── icon16.png, icon48.png, icon128.png
+│
+├── vite.config.js              # Vite config with crx plugin
+├── manifest.config.js          # Manifest V3 config
+├── package.json
+├── .eslintrc.cjs               # Linting config (optional)
+├── .prettierrc                 # Prettier config (optional)
