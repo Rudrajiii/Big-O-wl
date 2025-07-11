@@ -2,27 +2,27 @@
   <img src="src/assets/Big(O)wl.png" alt="Big(O)wl Logo" width="150" />
 </p>
 
-<h1 align="center">🦉 Big(O)wl</h1>
+<h1 align="center">Big(O)wl 🦉</h1>
 
 <p align="center">
   <em>Know the Big O before your code says Uh-oh!</em><br/>
   <strong>A Chrome Extension to instantly analyze your code's Time & Space Complexity</strong>
 </p>
 
----
+
 
 ## ⚡ What is Big(O)wl?
-
+> [!NOTE]  
 > **Big(O)wl** is a Gen-Z-coded Chrome Extension that lets you select/highlight any code on a webpage and instantly tells you the **Time Complexity** and **Space Complexity** along with the Plot for Visualization — powered by AI.  
 Whether you're reviewing someone's GitHub, reading articles, or prepping for interviews in damn LEET CODE, this extension has your back.
 
----
+
 
 ## 🤔 Why Big(O)wl ?
 > [!IMPORTANT] 
 > Got this idea from Leetcode's Analyze Complexity feature which gives you the complexity analysis of your code along with the Plot, But **for the non-premium users this feature is available only for once at a day**. So In the other hand **Big(O)wl** provides it for free as much as you want with more analytical features.  
 
----
+
 
 ## 🧠 Features
 
@@ -41,7 +41,7 @@ Whether you're reviewing someone's GitHub, reading articles, or prepping for int
 - 🧠 **Smart Filtering**  
   Ignores non-code or unrelated code (like API/server/infra), keeping the output relevant to DSA problems only.
 
----
+
 
 ## 🧰 Tech Stack
 
@@ -50,7 +50,7 @@ Whether you're reviewing someone's GitHub, reading articles, or prepping for int
 | React 18 | Groq LLM | Recharts |
 | SCSS     | MathJax  | SVG Magic |
 
----
+
 
 ## 🛠️ Setup (Dev Mode)
 
