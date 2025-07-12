@@ -1,8 +1,52 @@
 @mixin content-box{
-    flex-direction: column;
+    
     align-items: center;
     justify-content: center;
     width: 100%;
+}
+
+// Animated gradient for the (O) in Big(O)wl
+.animated-o {
+  background: linear-gradient(
+    45deg,
+    #ff6b6b,
+    #4ecdc4,
+    #45b7d1,
+    #96ceb4,
+    #ffeaa7,
+    #fd79a8,
+    #6c5ce7,
+    #a29bfe
+  );
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 3s ease-in-out infinite;
+  font-weight: 700;
+  display: inline-block;
+  text-shadow: none;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gradientSlide {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 .popup-container {
@@ -15,6 +59,49 @@
   
   .header{
     display: flex;
+    position: relative;
+    flex-direction: row;
+    // border: 2px solid red;
+    .pay-me-if-u-r-kind{
+      position: absolute;
+      right: 10px;
+      top: 6px;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      overflow: hidden;
+      position: relative;
+      //  border: 2px solid red;
+      //  margin-right: 1rem;
+      
+      
+    }
+    .pay-me-if-u-r-kind:hover{
+      background: transparent;
+      color: transparent;
+      background-image: linear-gradient(
+        90deg,
+        #ff6b6b,
+        #4ecdc4,
+        #45b7d1,
+        #96ceb4,
+        #ffeaa7
+      );
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: gradientSlide 0.6s ease-in-out;
+      transform: scale(1.05);
+      filter: drop-shadow(0 0 8px rgba(255, 107, 107, 0.5));
+      
+      &::before {
+        left: 100%;
+      }
+    }
     @include content-box;
     
     h1, p{
@@ -23,10 +110,17 @@
       width: 100%;
       text-align: center;
     }
+    
+    h1 {
+      font-weight: 600;
+      font-size: 1.8rem;
+      margin-left:3rem;
+    }
   }
 
   .Plot-Algo-Section{
     display: flex;
+    flex-direction: column;
     @include content-box;
     padding: 0;
     // border: 2px solid red;

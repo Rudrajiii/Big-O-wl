@@ -4,11 +4,17 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import '../styles/popup.scss';
 import __star__ from '../assets/stars.svg';
 import __tick__ from '../assets/tick.svg';
-import __loading__ from '../assets/3dx-rotate.gif'; // Add your gif import
+import __loading__ from '../assets/3dx-rotate.gif';
 import { FaTrashRestoreAlt } from "react-icons/fa";
 import Groq from 'groq-sdk';
 import Ploty from '../components/Ploty.jsx'; 
+import LoadingScreen from '../components/LoadingScreen.jsx';
+import PayMePage from '../components/PayMePage.jsx';
 import { BsArrowUpRightCircleFill } from "react-icons/bs";
+import { sysPrompt } from '../utils/SYSTEM_PROMPT.jsx';
+import { complexityMap } from '../utils/COMPLEXITY_MAP.jsx';
+import { LuHeartHandshake } from "react-icons/lu";
+import { IoArrowBack } from "react-icons/io5";
 
 
 
@@ -22,15 +28,17 @@ const groq = new Groq({
 export default function App() {
   const [selectedCode, setSelectedCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [result, setResult] = useState('');
-  const [showPlot, setShowPlot] = useState(false); // Add state for plot visibility
-  const [showCodeSection, setShowCodeSection] = useState(true); // Add state for code section visibility
-  const [emoji, setEmoji] = useState(true); // Add state for emoji
-  const [showExplicitArrowOfComplexity, setShowExplicitArrowOfComplexity] = useState(false); // Add state for explicit arrow visibility
-  const [showLineComplexity, setShowLineComplexity] = useState(true); // Add state for default time line visibility
-  // Helper function to extract time complexity from result and map to plot keys
+  const [showPlot, setShowPlot] = useState(false);
+  const [showCodeSection, setShowCodeSection] = useState(true);
+  const [emoji, setEmoji] = useState(true);
+  const [showExplicitArrowOfComplexity, setShowExplicitArrowOfComplexity] = useState(false);
+  const [showLineComplexity, setShowLineComplexity] = useState(true);
+  const [currentPage, setCurrentPage] = useState('main'); // Add page state
+
   const getComplexityHighlight = (result , showLineComplexity) => {
-    if (!result || result.includes("Cannot determine")) return 'linear'; // default
+    if (!result || result.includes("Cannot determine")) return 'linear'; 
     console.log('result:', result);
     // Extract time complexity line
     const lines = result.split('\n');
@@ -42,25 +50,6 @@ export default function App() {
     const spaceComplexityValue = spaceLine.split('=')[1]?.trim();
     if (!timeComplexityValue) return 'linear';
     if (!spaceComplexityValue) return 'linear';
-    
-    // Map complexity notations to plot keys
-    const complexityMap = {
-      'O(1)': 'const',
-      'O(log(n))': 'log',
-      'O(log(N))': 'log',
-      'O(√n)': 'sqrt',
-      'O(√N)': 'sqrt',
-      'O(n)': 'linear',
-      'O(N)': 'linear',
-      'O(n log n)': 'nlogn',
-      'O(N log N)': 'nlogn',
-      'O(n²)': 'quad',
-      'O(N²)': 'quad',
-      'O(n^2)': 'quad',
-      'O(N^2)': 'quad',
-      'O(2^n)': 'exp',
-      'O(2^N)': 'exp'
-    };
     
     return showLineComplexity ? complexityMap[timeComplexityValue] || 'linear' : complexityMap[spaceComplexityValue] || 'linear';
   };
@@ -102,39 +91,7 @@ export default function App() {
     
     setIsLoading(true);
     setResult(''); // Reset previous result
-    /* ----- SYSTEM PROMPT ----- */
-    const sysPrompt = `
-      You are an expert algorithm complexity analyzer. Your ONLY job is to analyze algorithmic code snippets.
-
-      STRICT RULES:
-      1. ONLY analyze code that contains actual algorithms, data structures, or computational logic
-      3. DO NOT Reply anything like "You are given..." , "Who Made This?" or any other irrelevant text
-      2. DO NOT analyze: plain text, problem descriptions, configuration files, server setup code, HTML/CSS, or non-algorithmic code
-      3. If the input is NOT an algorithm implementation, respond EXACTLY with: "Cannot determine algorithmic complexity for this snippet."
-      4. If it IS algorithmic code, respond with ONLY these two lines (no explanations, no additional text):
-         Time Complexity = O(your_answer)
-         Space Complexity = O(your_answer)
-
-      WHAT COUNTS AS ALGORITHMIC CODE:
-      - Sorting algorithms (bubble sort, merge sort, etc.)
-      - Search algorithms (binary search, linear search, etc.)
-      - Data structure operations (tree traversal, graph algorithms, etc.)
-      - Dynamic programming solutions
-      - Mathematical algorithms
-      - Array/string manipulation with loops and conditions
-
-      WHAT DOES NOT COUNT:
-      - Problem descriptions or statements
-      - Server configuration (Flask, Express, etc.)
-      - Database queries
-      - HTML/CSS/markup
-      - Import statements only
-      - Variable declarations only
-      - Plain text explanations
-      - API endpoints without algorithmic logic
-
-      Be extremely strict. When in doubt, return "Cannot determine algorithmic complexity for this snippet."
-    `;
+    
     try {
       const chat = await groq.chat.completions.create({
         model: 'meta-llama/llama-4-scout-17b-16e-instruct',
@@ -158,6 +115,11 @@ export default function App() {
 
   // Load code when component mounts
   useEffect(() => {
+    // Show loading screen for 2 seconds on initial load
+    const loadingTimer = setTimeout(() => {
+      setIsInitialLoading(false);
+    }, 1000);
+
     loadSelectedCode();
     
     // Listen for storage changes (when new code is selected)
@@ -173,6 +135,7 @@ export default function App() {
         
         // Cleanup listener on unmount
         return () => {
+          clearTimeout(loadingTimer);
           if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
             chrome.storage.onChanged.removeListener(handleStorageChange);
           }
@@ -181,6 +144,11 @@ export default function App() {
     } catch (error) {
       console.error('Error setting up storage listener:', error);
     }
+
+    // Cleanup timer if component unmounts
+    return () => {
+      clearTimeout(loadingTimer);
+    };
   }, []);
 
   function removeResultSection() {
@@ -221,17 +189,34 @@ export default function App() {
     return showLineComplexity ? "Time Complexity ~ " : "Space Complexity ~ ";
   }
 
+  // Function to handle pay-me page navigation
+  function handlePayMeClick() {
+    setCurrentPage(currentPage === 'main' ? 'payMe' : 'main');
+  }
+
   return (
-    <div className="popup-container">
-      <div className="header">
-        <h1>Big(O)wl</h1>
-      </div>
+    <>
+      {isInitialLoading && <LoadingScreen />}
+      <div className="popup-container" style={{ display: isInitialLoading ? 'none' : 'flex' }}>
+        <div className="header">
+          <h1>Big<span className="animated-o">(O)</span>wl</h1>
+          {currentPage === 'main' ? (
+            <button className="pay-me-if-u-r-kind" onClick={handlePayMeClick}>
+              <LuHeartHandshake size={28} style={{verticalAlign:'middle', color:'#DA3E44', padding:'4px 8px'}}/>
+            </button>
+          ) : (
+            <button className="pay-me-if-u-r-kind back-btn" onClick={handlePayMeClick}>
+              <IoArrowBack size={28} style={{verticalAlign:'middle', color:'#4ecdc4', padding:'4px 8px'}}/>
+            </button>
+          )}
+        </div>
       
-      <section className="codes">
-        {selectedCode ? (
-          <div className="code-display">
-            {/* === RESULT SECTION === */}
-            {result && (
+      {currentPage === 'main' ? (
+        <section className="codes">
+          {selectedCode ? (
+            <div className="code-display">
+              {/* === RESULT SECTION === */}
+              {result && (
               <div className="complexity-result">
                 <div className="--horizontal--">
                     <h4 style={{display:'flex',flexDirection:'row',gap:'8px'}}>
@@ -341,7 +326,11 @@ export default function App() {
             </p>
           </div>
         )}
-      </section>
+        </section>
+      ) : (
+        <PayMePage />
+      )}
     </div>
+    </>
   );
 }
