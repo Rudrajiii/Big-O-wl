@@ -1,0 +1,123 @@
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  min-width: 250px;
+  max-width: 400px;
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 12px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 10000;
+  transform: translateX(100%);
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+  &.toast-visible {
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  .toast-content {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .toast-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .toast-message {
+    flex: 1;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 400;
+    line-height: 1.4;
+  }
+
+  .toast-close {
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+  }
+
+  // Toast type variations
+  &.toast-warning {
+    border-left: 4px solid #ffa116;
+    
+    .toast-icon {
+      color: #ffa116;
+    }
+  }
+
+  &.toast-error {
+    border-left: 4px solid #ff4757;
+    
+    .toast-icon {
+      color: #ff4757;
+    }
+  }
+
+  &.toast-success {
+    border-left: 4px solid #2ed573;
+    
+    .toast-icon {
+      color: #2ed573;
+    }
+  }
+
+  &.toast-info {
+    border-left: 4px solid #3742fa;
+    
+    .toast-icon {
+      color: #3742fa;
+    }
+  }
+
+  // Animation for multiple toasts
+  &:not(:first-child) {
+    margin-top: 10px;
+  }
+}
+
+// Toast container for multiple toasts
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  pointer-events: none;
+
+  .toast {
+    pointer-events: auto;
+    position: relative;
+    top: auto;
+    right: auto;
+    margin-bottom: 10px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}

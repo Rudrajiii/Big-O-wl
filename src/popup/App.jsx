@@ -15,7 +15,7 @@ import { sysPrompt } from '../utils/SYSTEM_PROMPT.jsx';
 import { complexityMap } from '../utils/COMPLEXITY_MAP.jsx';
 import { LuHeartHandshake } from "react-icons/lu";
 import { IoArrowBack } from "react-icons/io5";
-
+import Toast from '../components/Toast.jsx';
 
 
 
@@ -35,7 +35,30 @@ export default function App() {
   const [emoji, setEmoji] = useState(true);
   const [showExplicitArrowOfComplexity, setShowExplicitArrowOfComplexity] = useState(false);
   const [showLineComplexity, setShowLineComplexity] = useState(true);
-  const [currentPage, setCurrentPage] = useState('main'); // Add page state
+  const [isComplexityDetermined, setIsComplexityDetermined] = useState(true);
+  const [currentPage, setCurrentPage] = useState('main'); 
+
+
+  // Toast state
+  const [toast, setToast] = useState({
+    isVisible: false,
+    message: '',
+    type: 'warning'
+  });
+
+  // Function to show toast
+  const showToast = (message, type = 'warning') => {
+    setToast({
+      isVisible: true,
+      message,
+      type
+    });
+  };
+
+  // Function to hide toast
+  const hideToast = () => {
+    setToast(prev => ({ ...prev, isVisible: false }));
+  };
 
   const getComplexityHighlight = (result , showLineComplexity) => {
     if (!result || result.includes("Cannot determine")) return 'linear'; 
@@ -158,7 +181,13 @@ export default function App() {
   }
 
   
-  function togglePlot() {
+  function togglePlot(isComplexityDetermined) {
+    if(!isComplexityDetermined){
+      showToast('Cannot toggle plot visibility when complexity is not determined.',
+        'warning'
+      );
+      return;
+    }
     setShowPlot(!showPlot); // Toggle plot visibility
     setEmoji(!emoji); // Toggle emoji visibility  
     setShowExplicitArrowOfComplexity(!showExplicitArrowOfComplexity); // Toggle explicit arrow visibility
@@ -194,9 +223,24 @@ export default function App() {
     setCurrentPage(currentPage === 'main' ? 'payMe' : 'main');
   }
 
+  useEffect(() => {
+  if (result.includes("Cannot determine")) {
+    setIsComplexityDetermined(false);
+  } else if (result.trim()) {
+    setIsComplexityDetermined(true);
+  }
+}, [result]);
+
   return (
     <>
       {isInitialLoading && <LoadingScreen />}
+      <Toast 
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+        onClose={hideToast}
+        duration={4000}
+      />
       <div className="popup-container" style={{ display: isInitialLoading ? 'none' : 'flex' }}>
         <div className="header">
           <h1>Big<span className="animated-o">(O)</span>wl</h1>
@@ -224,20 +268,20 @@ export default function App() {
                       <img src={__tick__} alt="" style={{verticalAlign:'middle' , marginRight:'4px'}} className='tick' />
                       Analysis Result
                     </p>
-                    <p onClick={togglePlot} className="algoPlot" style={{margin:0, cursor:'pointer', color:'#FFA116',background:'#342a19ff',padding:'6px 9px',borderRadius:'10px',fontSize:'12px',fontWeight:'400'}}>
+                    <p onClick={() => togglePlot(isComplexityDetermined)} className="algoPlot" style={{margin:0, cursor:'pointer', color:'#FFA116',background:'#342a19ff',padding:'6px 9px',borderRadius:'10px',fontSize:'12px',fontWeight:'400'}}>
                       {showPlot ? 'Hide Plot' : 'Plot'}
                     </p>
                     </h4>
                     <button onClick={removeResultSection} id='cancel'>
                       {
-                        emoji ? '⚔️' : <span onClick={() => togglePlot()}>
+                        emoji ? '⚔️' : <span onClick={() => togglePlot(isComplexityDetermined)}>
                            👈🏻
                         </span>
                       }
                     </button>
                 </div>
                 <div className="result-content">
-                  {result.includes("Cannot determine") ? (
+                  {!isComplexityDetermined  ? (
                     <div className="not-algorithmic">
                       <span className="icon">⚠️</span>
                       <span>Cannot determine algorithmic complexity for this snippet.</span>
