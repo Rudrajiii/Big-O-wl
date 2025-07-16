@@ -3,10 +3,11 @@
 // Import loading styles
 @import './loading.scss';
 @import './payMe.scss';
+// @import './customComplexity.scss';
 
 html, body {
   width: 500px;
-  height: 600px;
+  min-height: 600px;
   overflow: hidden;
   padding: 0;
   margin: 0;

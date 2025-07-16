@@ -1,0 +1,78 @@
+.custom-complexity-plotter {
+  width: 100%;
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 12px;
+  padding: 1.5rem;
+  color: white;
+  font-family: "Poppins", sans-serif;
+  margin: 1rem 0;
+
+  .plotter-header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+
+    .complexity-title {
+      font-size: 0.9rem;
+      color: #888;
+      margin: 0 0 0.5rem 0;
+      font-weight: 400;
+    }
+
+    .complexity-notation {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0;
+      text-shadow: 0 0 10px currentColor;
+      letter-spacing: 1px;
+    }
+  }
+
+  .chart-container {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .complexity-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+
+      .info-label {
+        font-size: 0.85rem;
+        color: #ccc;
+        font-weight: 500;
+      }
+
+      .info-value {
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 450px) {
+  .custom-complexity-plotter {
+    padding: 1rem;
+
+    .plotter-header .complexity-notation {
+      font-size: 1.4rem;
+    }
+
+    .chart-container {
+      padding: 0.5rem;
+    }
+  }
+}

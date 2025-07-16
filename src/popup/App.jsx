@@ -7,7 +7,8 @@ import __tick__ from '../assets/tick.svg';
 import __loading__ from '../assets/3dx-rotate.gif';
 import { FaTrashRestoreAlt } from "react-icons/fa";
 import Groq from 'groq-sdk';
-import Ploty from '../components/Ploty.jsx'; 
+// import Ploty from '../components/Ploty.jsx'; 
+import ComplexityVisualizer from '../components/ComplexityVisualizer.jsx'; 
 import LoadingScreen from '../components/LoadingScreen.jsx';
 import PayMePage from '../components/PayMePage.jsx';
 import { BsArrowUpRightCircleFill } from "react-icons/bs";
@@ -16,6 +17,13 @@ import { complexityMap } from '../utils/COMPLEXITY_MAP.jsx';
 import { LuHeartHandshake } from "react-icons/lu";
 import { IoArrowBack } from "react-icons/io5";
 import Toast from '../components/Toast.jsx';
+import { ImLeaf } from "react-icons/im";
+import { FiCpu } from "react-icons/fi";
+import { BiSolidMemoryCard } from "react-icons/bi";
+import CPUAnalysis from '../components/CPUAnalysis.jsx';
+import MemoryAnalysis from '../components/MemoryAnalysis.jsx';
+
+
 
 
 
@@ -74,7 +82,7 @@ export default function App() {
     if (!timeComplexityValue) return 'linear';
     if (!spaceComplexityValue) return 'linear';
     
-    return showLineComplexity ? complexityMap[timeComplexityValue] || 'linear' : complexityMap[spaceComplexityValue] || 'linear';
+    return showLineComplexity ? timeComplexityValue : spaceComplexityValue;
   };
   
   // Function to load selected code from storage
@@ -180,31 +188,23 @@ export default function App() {
     
   }
 
-  
   function togglePlot(isComplexityDetermined) {
-    if(!isComplexityDetermined){
-      showToast('Cannot toggle plot visibility when complexity is not determined.',
-        'warning'
-      );
-      return;
-    }
-    setShowPlot(!showPlot); // Toggle plot visibility
-    setEmoji(!emoji); // Toggle emoji visibility  
-    setShowExplicitArrowOfComplexity(!showExplicitArrowOfComplexity); // Toggle explicit arrow visibility
-    if (showCodeSection) {
-      console.log('hiding code section');
-      document.querySelector('.code-header').style.display = 'none';
-      document.querySelector('.code-content').style.display = 'none';
-      setShowCodeSection(false); 
-      
-    }else {
-      console.log('showing code section');
-      document.querySelector('.code-header').style.display = 'flex';
-      document.querySelector('.code-content').style.display = 'block';
-      setShowCodeSection(true); 
-    }
-    // Hide header and code when plot is shown
+  if(!isComplexityDetermined){
+    showToast('Cannot toggle plot visibility when complexity is not determined.',
+      'warning'
+    );
+    return;
+  }
+  
+  const newShowPlot = !showPlot;
+  setShowPlot(newShowPlot); // Toggle plot visibility
+  setEmoji(!emoji); // Toggle emoji visibility  
+  setShowExplicitArrowOfComplexity(!showExplicitArrowOfComplexity); // Toggle explicit arrow visibility
+  
+  // When plot is shown, hide code section. When plot is hidden, show code section
+  setShowCodeSection(!newShowPlot);
 }
+
   function showIndividualComplexity(label , value){
     if( !label || !value) return;
     if (label.includes('Time Complexity')) {
@@ -231,6 +231,16 @@ export default function App() {
   }
 }, [result]);
 
+  function navigateToPage(page) {
+  if(!isComplexityDetermined){
+    showToast('Cannot show CPU/MEMORY stats when complexity is not determined.',
+      'warning'
+    );
+    return;
+  }
+  setCurrentPage(page);
+}
+
   return (
     <>
       {isInitialLoading && <LoadingScreen />}
@@ -254,8 +264,8 @@ export default function App() {
             </button>
           )}
         </div>
-      
-      {currentPage === 'main' ? (
+
+      {currentPage === 'main' && (
         <section className="codes">
           {selectedCode ? (
             <div className="code-display">
@@ -270,6 +280,12 @@ export default function App() {
                     </p>
                     <p onClick={() => togglePlot(isComplexityDetermined)} className="algoPlot" style={{margin:0, cursor:'pointer', color:'#FFA116',background:'#342a19ff',padding:'6px 9px',borderRadius:'10px',fontSize:'12px',fontWeight:'400'}}>
                       {showPlot ? 'Hide Plot' : 'Plot'}
+                    </p>
+                    <p onClick={() => navigateToPage('cpu')} style={{margin:0, cursor:'pointer', color:'#FFA116',background:'#342a19ff',padding:'6px 9px',borderRadius:'10px',fontSize:'12px',fontWeight:'400'}}>
+                      <FiCpu size={16} style={{verticalAlign:'middle',marginBottom:'1px'}} />
+                    </p>
+                    <p onClick={() => navigateToPage('memory')} style={{margin:0, cursor:'pointer', color:'#FFA116',background:'#342a19ff',padding:'6px 9px',borderRadius:'10px',fontSize:'12px',fontWeight:'400'}}>
+                      <BiSolidMemoryCard size={16} style={{verticalAlign:'middle',marginBottom:'1px'}} />
                     </p>
                     </h4>
                     <button onClick={removeResultSection} id='cancel'>
@@ -316,11 +332,16 @@ export default function App() {
             {/* === PLOT SECTION (appears under result when toggled) === */}
             {showPlot && result && (
               <section className='Plot-Algo-Section'>
-                <Ploty highlight={getComplexityHighlight(result , showLineComplexity)} typeOfComplexity={toggleComplexityName(showLineComplexity)}/>
+                {/* <Ploty highlight={getComplexityHighlight(result , showLineComplexity)} typeOfComplexity={toggleComplexityName(showLineComplexity)}/> */}
+                <ComplexityVisualizer 
+                      complexity={getComplexityHighlight(result, showLineComplexity)}
+                      typeOfComplexity={toggleComplexityName(showLineComplexity)}
+                      highlight={complexityMap[getComplexityHighlight(result, showLineComplexity)] || 'linear'}
+                />
               </section>
             )}
 
-            <div className="code-header">
+            <div className="code-header" style={{ display: showCodeSection ? 'flex' : 'none' }}>
               <h3>
                 <img src={__tick__} alt="" className='tick' />
                 Selected Code
@@ -352,7 +373,7 @@ export default function App() {
                 </button>
               </div>
             </div>
-            <div className="code-content">
+            <div className="code-content" style={{ display: showCodeSection ? 'block' : 'none' }}>
                 <SyntaxHighlighter language="javascript" className='editor' style={vscDarkPlus} customStyle={{
                     borderRadius: '8px',
                     fontSize: '14px',
@@ -360,6 +381,17 @@ export default function App() {
                 }}>
                     {selectedCode}
                 </SyntaxHighlighter>
+            </div>
+            <div className="footer">
+              <p>
+                <span className="github">
+                  Contribute
+                </span>
+                <span> <ImLeaf size={18} style={{verticalAlign:'middle',marginLeft:'4px',color:'#51e886' , marginBottom:'4px'}}/> </span>
+                <span className="discord">
+                  Join Our Discord
+                </span>
+              </p>
             </div>
           </div>
         ) : (
@@ -371,7 +403,21 @@ export default function App() {
           </div>
         )}
         </section>
-      ) : (
+      )}
+      {currentPage === 'cpu' && (
+        <CPUAnalysis 
+          selectedCode={selectedCode} 
+          complexity={getComplexityHighlight(result, true)} // Pass time complexity
+        />
+      )}
+
+      {currentPage === 'memory' && (
+        <MemoryAnalysis 
+          selectedCode={selectedCode} 
+          complexity={getComplexityHighlight(result, false)} // Pass space complexity
+        />
+      )}
+      {currentPage === 'payMe' && (
         <PayMePage />
       )}
     </div>

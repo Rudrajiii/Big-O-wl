@@ -6,9 +6,6 @@ import { TbCopy } from "react-icons/tb";
 import __tick__ from '../assets/tick.svg';
 import { RiLinksFill } from "react-icons/ri";
 import __dev__ from '../assets/dev.jpg';
-
-
-
 import '../styles/payMe.scss';
 
 
@@ -20,9 +17,8 @@ const PayMePage = () => {
   
   const copyUpiId = () => {
     navigator.clipboard.writeText(UPI_ID).then(() => {
-      // You could add a toast notification here
       setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000); // Reset after 2
+      setTimeout(() => setIsCopied(false), 2000);
       console.log('UPI ID copied to clipboard!');
     }).catch(err => {
       console.error('Failed to copy UPI ID: ', err);

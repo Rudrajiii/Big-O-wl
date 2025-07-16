@@ -389,4 +389,25 @@
   font-size: 0.85rem;
 }
 
-
+.footer{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  .github , .discord{
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  .github:hover{
+    cursor: pointer;
+    color: #31cbe3;
+  }
+  .discord:hover{
+    cursor: pointer;
+    color: #8362f0;
+  }
+  // border: 2px solid red;
+}
