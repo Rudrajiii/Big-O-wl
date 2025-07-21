@@ -7,7 +7,6 @@ import __tick__ from '../assets/tick.svg';
 import __loading__ from '../assets/3dx-rotate.gif';
 import { FaTrashRestoreAlt } from "react-icons/fa";
 import Groq from 'groq-sdk';
-// import Ploty from '../components/Ploty.jsx'; 
 import ComplexityVisualizer from '../components/ComplexityVisualizer.jsx'; 
 import LoadingScreen from '../components/LoadingScreen.jsx';
 import PayMePage from '../components/PayMePage.jsx';
@@ -18,14 +17,8 @@ import { LuHeartHandshake } from "react-icons/lu";
 import { IoArrowBack } from "react-icons/io5";
 import Toast from '../components/Toast.jsx';
 import { ImLeaf } from "react-icons/im";
-import { FiCpu } from "react-icons/fi";
 import { BiSolidMemoryCard } from "react-icons/bi";
-import CPUAnalysis from '../components/CPUAnalysis.jsx';
 import MemoryAnalysis from '../components/MemoryAnalysis.jsx';
-
-
-
-
 
 /* ---------- groq client ---------- */
 const groq = new Groq({
@@ -233,7 +226,8 @@ export default function App() {
 
   function navigateToPage(page) {
   if(!isComplexityDetermined){
-    showToast('Cannot show CPU/MEMORY stats when complexity is not determined.',
+    showToast(
+      'Cannot show MEMORY stats when complexity is not determined.',
       'warning'
     );
     return;
@@ -280,9 +274,6 @@ export default function App() {
                     </p>
                     <p onClick={() => togglePlot(isComplexityDetermined)} className="algoPlot" style={{margin:0, cursor:'pointer', color:'#FFA116',background:'#342a19ff',padding:'6px 9px',borderRadius:'10px',fontSize:'12px',fontWeight:'400'}}>
                       {showPlot ? 'Hide Plot' : 'Plot'}
-                    </p>
-                    <p onClick={() => navigateToPage('cpu')} style={{margin:0, cursor:'pointer', color:'#FFA116',background:'#342a19ff',padding:'6px 9px',borderRadius:'10px',fontSize:'12px',fontWeight:'400'}}>
-                      <FiCpu size={16} style={{verticalAlign:'middle',marginBottom:'1px'}} />
                     </p>
                     <p onClick={() => navigateToPage('memory')} style={{margin:0, cursor:'pointer', color:'#FFA116',background:'#342a19ff',padding:'6px 9px',borderRadius:'10px',fontSize:'12px',fontWeight:'400'}}>
                       <BiSolidMemoryCard size={16} style={{verticalAlign:'middle',marginBottom:'1px'}} />
@@ -403,12 +394,6 @@ export default function App() {
           </div>
         )}
         </section>
-      )}
-      {currentPage === 'cpu' && (
-        <CPUAnalysis 
-          selectedCode={selectedCode} 
-          complexity={getComplexityHighlight(result, true)} // Pass time complexity
-        />
       )}
 
       {currentPage === 'memory' && (
