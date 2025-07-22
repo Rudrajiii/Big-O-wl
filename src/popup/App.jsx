@@ -12,6 +12,7 @@ import LoadingScreen from '../components/LoadingScreen.jsx';
 import PayMePage from '../components/PayMePage.jsx';
 import { BsArrowUpRightCircleFill } from "react-icons/bs";
 import { sysPrompt } from '../utils/SYSTEM_PROMPT.jsx';
+import { SYSTEM_PROMPT_FOR_MEM_ANALYSIS } from '../utils/SYSTEM_PROMPT_FOR_MEM_ANALYSIS.jsx';
 import { complexityMap } from '../utils/COMPLEXITY_MAP.jsx';
 import { LuHeartHandshake } from "react-icons/lu";
 import { IoArrowBack } from "react-icons/io5";
@@ -19,7 +20,8 @@ import Toast from '../components/Toast.jsx';
 import { ImLeaf } from "react-icons/im";
 import { BiSolidMemoryCard } from "react-icons/bi";
 import MemoryAnalysis from '../components/MemoryAnalysis.jsx';
-
+import Test from '../components/test.jsx'; // Placeholder for future test feature
+import DynamicTest from '../components/DyanmicTest.jsx'
 /* ---------- groq client ---------- */
 const groq = new Groq({
   apiKey: import.meta.env.VITE_GROQ_API_KEY,
@@ -38,6 +40,7 @@ export default function App() {
   const [showLineComplexity, setShowLineComplexity] = useState(true);
   const [isComplexityDetermined, setIsComplexityDetermined] = useState(true);
   const [currentPage, setCurrentPage] = useState('main'); 
+  const [showMemoryAnalysis, setShowMemoryAnalysis] = useState('');
 
 
   // Toast state
@@ -137,6 +140,178 @@ export default function App() {
     }
   };
 
+
+  // Add this new function to load memory analysis from storage
+const loadMemoryAnalysis = () => {
+  try {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(['memoryAnalysis', 'analysisTimestamp', 'analyzedCode'], (result) => {
+        if (chrome.runtime.lastError) {
+          console.error('Chrome storage error:', chrome.runtime.lastError);
+          return;
+        }
+        
+        if (result.memoryAnalysis && result.analyzedCode === selectedCode) {
+          // Store the parsed JSON as string for display
+          setShowMemoryAnalysis(JSON.stringify(result.memoryAnalysis));
+          console.log('Loaded memory analysis from storage:', result.memoryAnalysis);
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error loading memory analysis:', error);
+  }
+};
+
+  const analyzeMemory = async () => {
+  if (!selectedCode) return;
+
+  // First check if we have cached memory analysis for this code
+  try {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+      chrome.storage.local.get(['memoryAnalysis', 'analyzedCode'], (result) => {
+        if (result.memoryAnalysis && result.analyzedCode === selectedCode) {
+          // Use cached data
+          setShowMemoryAnalysis(JSON.stringify(result.memoryAnalysis));
+          showToast('Loaded cached memory analysis!', 'info');
+          navigateToPage('memory');
+          return;
+        } else {
+          // Generate new analysis
+          performMemoryAnalysis();
+        }
+      });
+    } else {
+      performMemoryAnalysis();
+    }
+  } catch (error) {
+    console.error('Error checking cached memory analysis:', error);
+    performMemoryAnalysis();
+  }
+};
+
+const performMemoryAnalysis = async () => {
+  setShowMemoryAnalysis('');
+  if(!isComplexityDetermined){
+    showToast(
+      'Cannot show MEMORY stats when complexity is not determined.',
+      'warning'
+    );
+    return;
+  }
+  showToast('Analyzing memory usage...', 'info');
+  
+  try {
+    const chat = await groq.chat.completions.create({
+      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+      temperature: 0,
+      max_completion_tokens: 4096,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT_FOR_MEM_ANALYSIS.trim() },
+        { role: 'user', content: selectedCode }
+      ]
+    });
+
+    const answer = chat.choices[0]?.message?.content?.trim() || '';
+    
+    // More aggressive JSON extraction
+    let safeJson = answer;
+    
+    // Remove code blocks if present
+    safeJson = safeJson.replace(/^```(?:json|javascript|js)?\s*/gm, '').replace(/```\s*$/gm, '');
+    
+    // Find JSON content between braces
+    const jsonMatch = safeJson.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      safeJson = jsonMatch[0];
+    }
+    
+    // Clean up any remaining non-JSON content
+    safeJson = safeJson.trim();
+    
+    console.log('Original response:', answer);
+    console.log('Cleaned JSON:', safeJson);
+    
+    let parseToJson;
+    try {
+      parseToJson = JSON.parse(safeJson);
+      console.log('Parsed JSON:', parseToJson);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError);
+      console.error('Failed to parse:', safeJson);
+      
+      // Fallback: try to extract JSON more aggressively
+      const lines = safeJson.split('\n');
+      const jsonLines = [];
+      let inJson = false;
+      let braceCount = 0;
+      
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (trimmedLine.startsWith('{')) {
+          inJson = true;
+          braceCount = 0;
+        }
+        
+        if (inJson) {
+          jsonLines.push(line);
+          for (const char of line) {
+            if (char === '{') braceCount++;
+            if (char === '}') braceCount--;
+          }
+          
+          if (braceCount === 0 && trimmedLine.endsWith('}')) {
+            break;
+          }
+        }
+      }
+      
+      if (jsonLines.length > 0) {
+        const fallbackJson = jsonLines.join('\n');
+        console.log('Fallback JSON attempt:', fallbackJson);
+        parseToJson = JSON.parse(fallbackJson);
+      } else {
+        throw new Error('Could not extract valid JSON from response');
+      }
+    }
+    
+    setShowMemoryAnalysis(answer);
+    
+    // Store memory analysis in local storage (override previous)
+    try {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.set({ 
+          memoryAnalysis: parseToJson,
+          analysisTimestamp: Date.now(),
+          analyzedCode: selectedCode
+        });
+      }
+    } catch (storageError) {
+      console.error('Error storing memory analysis:', storageError);
+    }
+    
+    console.log('Memory Analysis:', answer);
+    showToast('Memory analysis completed successfully!', 'success');
+    
+    // Navigate to memory page after successful analysis
+    navigateToPage('memory');
+    
+  } catch (err) {
+    console.error('Groq error', err);
+    
+    // More specific error handling
+    let errorMsg = '⚠️ Error analyzing memory usage.';
+    if (err.message && err.message.includes('JSON')) {
+      errorMsg = '⚠️ Error: Received invalid response format. Please try again.';
+    } else if (err.message && err.message.includes('network')) {
+      errorMsg = '⚠️ Network error. Please check your connection and try again.';
+    }
+    
+    setShowMemoryAnalysis(errorMsg);
+    showToast('Failed to analyze memory usage. Please try again.', 'error');
+  }
+};
+
   // Load code when component mounts
   useEffect(() => {
     // Show loading screen for 2 seconds on initial load
@@ -149,8 +324,18 @@ export default function App() {
     // Listen for storage changes (when new code is selected)
     const handleStorageChange = (changes) => {
       if (changes.selectedCode) {
-        setSelectedCode(changes.selectedCode.newValue || '');
+        const newCode = changes.selectedCode.newValue || '';
+      setSelectedCode(newCode);
+      
+      // Clear memory analysis when code changes
+      if (newCode !== selectedCode) {
+        setShowMemoryAnalysis('');
       }
+      }
+      // Listen for memory analysis updates
+    if (changes.memoryAnalysis) {
+      setShowMemoryAnalysis(changes.memoryAnalysis.newValue || '');
+    }
     };
 
     try {
@@ -174,6 +359,12 @@ export default function App() {
       clearTimeout(loadingTimer);
     };
   }, []);
+
+  useEffect(() => {
+  if (selectedCode) {
+    loadMemoryAnalysis();
+  }
+}, [selectedCode]);
 
   function removeResultSection() {
     setResult('');
@@ -252,6 +443,7 @@ export default function App() {
             <button className="pay-me-if-u-r-kind" onClick={handlePayMeClick}>
               <LuHeartHandshake size={28} style={{verticalAlign:'middle', color:'#DA3E44', padding:'4px 8px'}}/>
             </button>
+            
           ) : (
             <button className="pay-me-if-u-r-kind back-btn" onClick={handlePayMeClick}>
               <IoArrowBack size={28} style={{verticalAlign:'middle', color:'#4ecdc4', padding:'4px 8px'}}/>
@@ -273,9 +465,9 @@ export default function App() {
                       Analysis Result
                     </p>
                     <p onClick={() => togglePlot(isComplexityDetermined)} className="algoPlot" style={{margin:0, cursor:'pointer', color:'#FFA116',background:'#342a19ff',padding:'6px 9px',borderRadius:'10px',fontSize:'12px',fontWeight:'400'}}>
-                      {showPlot ? 'Hide Plot' : 'Plot'}
+                      {showPlot ? 'Hide Plot' : 'Plot the complexity'}
                     </p>
-                    <p onClick={() => navigateToPage('memory')} style={{margin:0, cursor:'pointer', color:'#FFA116',background:'#342a19ff',padding:'6px 9px',borderRadius:'10px',fontSize:'12px',fontWeight:'400'}}>
+                    <p onClick={analyzeMemory} style={{margin:0, cursor:'pointer', color:'#FFA116',background:'#342a19ff',padding:'6px 9px',borderRadius:'10px',fontSize:'12px',fontWeight:'400'}}>
                       <BiSolidMemoryCard size={16} style={{verticalAlign:'middle',marginBottom:'1px'}} />
                     </p>
                     </h4>
@@ -374,8 +566,11 @@ export default function App() {
                 </SyntaxHighlighter>
             </div>
             <div className="footer">
+              {/* <button type="button" onClick={() => navigateToPage('test')}>
+                test-feature section
+              </button> */}
               <p>
-                <span className="github">
+                <span onClick={() => window.open('https://github.com/Rudrajiii/Big-O-wl', '_blank')} className="github">
                   Contribute
                 </span>
                 <span> <ImLeaf size={18} style={{verticalAlign:'middle',marginLeft:'4px',color:'#51e886' , marginBottom:'4px'}}/> </span>
@@ -397,14 +592,18 @@ export default function App() {
       )}
 
       {currentPage === 'memory' && (
-        <MemoryAnalysis 
-          selectedCode={selectedCode} 
-          complexity={getComplexityHighlight(result, false)} // Pass space complexity
-        />
+        <DynamicTest/>
       )}
+      
       {currentPage === 'payMe' && (
         <PayMePage />
       )}
+
+      {/* {
+        currentPage === 'test' && (
+          <DynamicTest />
+        )
+      } */}
     </div>
     </>
   );

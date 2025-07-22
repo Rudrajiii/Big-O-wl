@@ -13,6 +13,7 @@
     "@crxjs/vite-plugin": "^2.0.2",
     "expr-eval": "^2.0.2",
     "groq-sdk": "^0.26.0",
+    "lucide-react": "^0.525.0",
     "mathjs": "^14.5.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

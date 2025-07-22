@@ -33,7 +33,7 @@ const PayMePage = () => {
         <FaHeart className="heart-icon" />
         <h2>Support Big(O)wl Development</h2>
         <p style={{marginBottom:'6px'}}>Help keep this project alive and growing!</p>
-        <p style={{ padding: '4px 10px', cursor:'pointer', background:'rgba(255, 255, 255, 0.1)',  borderRadius: '5px', width: 'fit-content' , margin:'auto'}}>
+        <p onClick={() => window.open('https://github.com/Rudrajiii/Big-O-wl', '_blank')} style={{ padding: '4px 10px', cursor:'pointer', background:'rgba(255, 255, 255, 0.1)',  borderRadius: '5px', width: 'fit-content' , margin:'auto'}}>
           {/* let users star the github repo and ask them for star which helps to grow this project */}
           ⭐ Star On GitHub 
         </p>
@@ -108,16 +108,6 @@ const PayMePage = () => {
         </div>
       </div>
 
-      <div className="features-roadmap">
-        <h3>🚀 Upcoming Features</h3>
-        <ul className="roadmap-list">
-          <li>✨ Support for more programming languages</li>
-          <li>📊 Advanced complexity visualizations</li>
-          <li>🔍 Code optimization suggestions</li>
-          <li>📈 Performance benchmarking</li>
-          <li>🤖 AI-powered code analysis</li>
-        </ul>
-      </div>
 
       <div className="thank-you">
         <FaHeart className="thank-you-heart" />
