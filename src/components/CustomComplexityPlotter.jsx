@@ -18,8 +18,37 @@ const parser = new Parser({
 parser.functions.log = Math.log2;
 parser.functions.sqrt = Math.sqrt;
 
-// Evaluate expression using expr-eval
-const safeEval = (expression, n, m = n) => {
+// Extract all variables from complexity expression
+const extractVariables = (expression) => {
+  // Remove O() wrapper and common symbols
+  let cleaned = expression
+    .replace(/^O\(/, '')
+    .replace(/\)$/, '')
+    .toLowerCase();
+  
+  // Find all single letter variables (a-z) that are word boundaries
+  const variableMatches = cleaned.match(/\b[a-z]\b/g) || [];
+  
+  // Remove duplicates and common non-variable words
+  const variables = [...new Set(variableMatches)]
+    .filter(v => !['e', 'pi', 'ln'].includes(v)) // Filter out constants
+    .sort(); // Sort for consistency
+  
+  console.log(`Extracted variables from "${expression}":`, variables);
+  return variables;
+};
+
+// Create variable mappings for evaluation
+const createVariableMappings = (variables, baseValue) => {
+  const mappings = {};
+  variables.forEach(variable => {
+    mappings[variable] = baseValue;
+  });
+  return mappings;
+};
+
+// Dynamic safe evaluation that handles any variables
+const safeEval = (expression, baseValue, variableMappings = {}) => {
   let expr = '';
   try {
     expr = expression.trim();
@@ -29,158 +58,141 @@ const safeEval = (expression, n, m = n) => {
       expr = expr.slice(2, -1);
     }
 
-    // Handle common complexity patterns first - ORDER MATTERS!
-    // Process most specific patterns first to avoid conflicts
-    expr = expr
-      .toLowerCase()
-      // Handle square root symbols first - be very specific with word boundaries
-      .replace(/n\s*√\s*n/g, 'n * sqrt(n)')
-      .replace(/m\s*√\s*m/g, 'm * sqrt(m)')
-      .replace(/√\s*n/g, 'sqrt(n)')
-      .replace(/√\s*m/g, 'sqrt(m)')
+    // Convert to lowercase for processing
+    expr = expr.toLowerCase();
+
+    // Get all variables in the expression
+    const variables = Object.keys(variableMappings);
+    
+    // Handle complex patterns dynamically for any variable
+    variables.forEach(variable => {
+      const v = variable;
       
-      // Handle n log log n patterns FIRST (most specific)
-      .replace(/n\s*log\s*log\s*n/g, 'n * log(log(n))')
-      .replace(/m\s*log\s*log\s*m/g, 'm * log(log(m))')
-      .replace(/n\s*log\s*log\s*m/g, 'n * log(log(m))')
-      .replace(/m\s*log\s*log\s*n/g, 'm * log(log(n))')
+      // Handle square root symbols
+      expr = expr.replace(new RegExp(`${v}\\s*√\\s*${v}`, 'g'), `${v} * sqrt(${v})`);
+      expr = expr.replace(new RegExp(`√\\s*${v}`, 'g'), `sqrt(${v})`);
       
-      // Handle standalone log log n patterns
-      .replace(/log\s*log\s*n/g, 'log(log(n))')
-      .replace(/log\s*log\s*m/g, 'log(log(m))')
-      .replace(/loglogn/g, 'log(log(n))')
-      .replace(/loglogm/g, 'log(log(m))')
+      // Handle log log patterns (most specific first)
+      expr = expr.replace(new RegExp(`${v}\\s*log\\s*log\\s*${v}`, 'g'), `${v} * log(log(${v}))`);
+      expr = expr.replace(new RegExp(`log\\s*log\\s*${v}`, 'g'), `log(log(${v}))`);
+      expr = expr.replace(new RegExp(`loglog${v}`, 'g'), `log(log(${v}))`);
       
-      // Handle n log n pattern (after log log patterns)
-      .replace(/n\s*log\s*n/g, 'n * log(n)')
-      .replace(/m\s*log\s*m/g, 'm * log(m)')
-      .replace(/n\s*log\s*m/g, 'n * log(m)')
-      .replace(/m\s*log\s*n/g, 'm * log(n)')
+      // Handle n log n patterns
+      expr = expr.replace(new RegExp(`${v}\\s*log\\s*${v}`, 'g'), `${v} * log(${v})`);
+      expr = expr.replace(new RegExp(`${v}\\s*log\\s*\\(\\s*${v}\\s*\\)`, 'g'), `${v} * log(${v})`);
       
-      // Handle n log(n) pattern (with parentheses)
-      .replace(/n\s*log\s*\(\s*n\s*\)/g, 'n * log(n)')
-      .replace(/m\s*log\s*\(\s*m\s*\)/g, 'm * log(m)')
-      
-      // Handle standalone log patterns (least specific)
-      .replace(/\blog\s*\(\s*n\s*\)/g, 'log(n)')
-      .replace(/\blog\s*\(\s*m\s*\)/g, 'log(m)')
-      .replace(/\blog\s*n(?!\s*\()/g, 'log(n)')
-      .replace(/\blog\s*m(?!\s*\()/g, 'log(m)')
-      .replace(/\blog(?!\s*[nm\(])/g, 'log(n)')
+      // Handle standalone log patterns
+      expr = expr.replace(new RegExp(`\\blog\\s*\\(\\s*${v}\\s*\\)`, 'g'), `log(${v})`);
+      expr = expr.replace(new RegExp(`\\blog\\s*${v}(?!\\s*\\()`, 'g'), `log(${v})`);
       
       // Handle exponents with curly braces (LaTeX style)
-      .replace(/n\^\{([^}]+)\}/g, (match, exp) => {
+      expr = expr.replace(new RegExp(`${v}\\^\\{([^}]+)\\}`, 'g'), (match, exp) => {
         const exponent = parseFloat(exp);
-        if (exponent === 1.5) return 'n * sqrt(n)';
-        if (exponent === 2) return 'n * n';
-        if (exponent === 3) return 'n * n * n';
-        return `pow(n, ${exponent})`;
-      })
-      .replace(/m\^\{([^}]+)\}/g, (match, exp) => {
-        const exponent = parseFloat(exp);
-        if (exponent === 1.5) return 'm * sqrt(m)';
-        if (exponent === 2) return 'm * m';
-        if (exponent === 3) return 'm * m * m';
-        return `pow(m, ${exponent})`;
-      })
-      .replace(/2\^\{([^}]+)\}/g, (match, exp) => {
-        return `pow(2, ${exp.replace(/n/g, 'n').replace(/m/g, 'm')})`;
-      })
+        if (exponent === 1.5) return `${v} * sqrt(${v})`;
+        if (exponent === 2) return `${v} * ${v}`;
+        if (exponent === 3) return `${v} * ${v} * ${v}`;
+        return `pow(${v}, ${exponent})`;
+      });
       
       // Handle regular exponents
-      .replace(/n\^2/g, 'n * n')
-      .replace(/n\^3/g, 'n * n * n')
-      .replace(/m\^2/g, 'm * m')
-      .replace(/m\^3/g, 'm * m * m')
-      .replace(/n²/g, 'n * n')
-      .replace(/n³/g, 'n * n * n')
-      .replace(/2\^n/g, 'pow(2, n)')
+      expr = expr.replace(new RegExp(`${v}\\^2`, 'g'), `${v} * ${v}`);
+      expr = expr.replace(new RegExp(`${v}\\^3`, 'g'), `${v} * ${v} * ${v}`);
+      expr = expr.replace(new RegExp(`${v}²`, 'g'), `${v} * ${v}`);
+      expr = expr.replace(new RegExp(`${v}³`, 'g'), `${v} * ${v} * ${v}`);
       
-      // Handle n^1.5 (n * sqrt(n)) - multiple formats
-      .replace(/n\^1\.5/g, 'n * sqrt(n)')
-      .replace(/n\^1,5/g, 'n * sqrt(n)')
-      .replace(/n\^3\/2/g, 'n * sqrt(n)')
-      .replace(/n\^{3\/2}/g, 'n * sqrt(n)')
+      // Handle n^1.5 patterns
+      expr = expr.replace(new RegExp(`${v}\\^1\\.5`, 'g'), `${v} * sqrt(${v})`);
+      expr = expr.replace(new RegExp(`${v}\\^1,5`, 'g'), `${v} * sqrt(${v})`);
+      expr = expr.replace(new RegExp(`${v}\\^3\\/2`, 'g'), `${v} * sqrt(${v})`);
+      expr = expr.replace(new RegExp(`${v}\\^\\{3\\/2\\}`, 'g'), `${v} * sqrt(${v})`);
       
-      // Handle factorial (approximate for large n)
-      .replace(/n!/g, 'pow(n, n)')
+      // Handle factorial
+      expr = expr.replace(new RegExp(`${v}!`, 'g'), `pow(${v}, ${v})`);
       
-      // Handle sqrt function calls (after all other replacements)
-      .replace(/sqrt\s*n/g, 'sqrt(n)')
-      .replace(/sqrt\s*m/g, 'sqrt(m)');
+      // Handle sqrt function calls
+      expr = expr.replace(new RegExp(`sqrt\\s*${v}`, 'g'), `sqrt(${v})`);
+    });
+
+    // Handle exponential patterns (2^variable)
+    variables.forEach(variable => {
+      expr = expr.replace(new RegExp(`2\\^${variable}`, 'g'), `pow(2, ${variable})`);
+      expr = expr.replace(new RegExp(`2\\^\\{${variable}\\}`, 'g'), `pow(2, ${variable})`);
+    });
+
+    // Handle general log without specific variable (default to primary variable)
+    if (variables.length > 0 && expr.includes('log') && !expr.includes('log(')) {
+      const primaryVar = variables[0]; // Use first variable as primary
+      expr = expr.replace(/\blog(?!\s*[a-z\(])/g, `log(${primaryVar})`);
+    }
 
     // Replace variables with actual values
-    expr = expr
-      .replace(/\bn\b/g, n.toString())
-      .replace(/\bm\b/g, m.toString());
+    variables.forEach(variable => {
+      const value = variableMappings[variable];
+      expr = expr.replace(new RegExp(`\\b${variable}\\b`, 'g'), value.toString());
+    });
 
-    console.log(`Evaluating: ${expression} -> ${expr} with n=${n}`); // Debug log
+    console.log(`Evaluating: ${expression} -> ${expr} with mappings:`, variableMappings);
 
     const result = parser.evaluate(expr);
     
     // Handle edge cases for special functions
     if (isNaN(result) || result === -Infinity || result === Infinity) {
-      // For log log n, we need n >= 4 for reasonable results
+      // For log log patterns
       if (expression.toLowerCase().includes('log log')) {
-        if (n < 4) {
-          return 0.1; // Small positive value for visualization
+        if (baseValue < 4) {
+          return 0.1;
         }
-        // If still invalid, try a fallback calculation
-        const logN = Math.log2(n);
-        const logLogN = logN > 1 ? Math.log2(logN) : 0.1;
-        if (expression.toLowerCase().includes('n log log')) {
-          return n * logLogN;
+        const logBase = Math.log2(baseValue);
+        const logLogBase = logBase > 1 ? Math.log2(logBase) : 0.1;
+        if (variables.some(v => expression.toLowerCase().includes(`${v} log log`))) {
+          return baseValue * logLogBase;
         }
-        return logLogN;
+        return logLogBase;
       }
       
-      // For n^1.5 patterns
+      // For ^1.5 patterns
       if (expression.toLowerCase().includes('1.5') || expression.includes('{1.5}')) {
-        return n * Math.sqrt(n);
+        return baseValue * Math.sqrt(baseValue);
       }
       
       return 0;
     }
     
-    return Math.max(0, result); // Ensure non-negative values
+    return Math.max(0, result);
   } catch (e) {
-    console.error('Error evaluating expression:', expression, 'with n =', n, 'Error:', e.message);
+    console.error('Error evaluating expression:', expression, 'with base value =', baseValue, 'Error:', e.message);
     console.error('Processed expression:', expr);
     
     // Fallback calculation for known patterns
-    if (expression.toLowerCase().includes('n log log n')) {
-      const logN = Math.log2(n);
-      const logLogN = logN > 1 ? Math.log2(logN) : 0.1;
-      return n * logLogN;
-    }
-    if (expression.toLowerCase().includes('log log n')) {
-      const logN = Math.log2(n);
-      return logN > 1 ? Math.log2(logN) : 0.1;
+    if (expression.toLowerCase().includes('log log')) {
+      const logBase = Math.log2(baseValue);
+      const logLogBase = logBase > 1 ? Math.log2(logBase) : 0.1;
+      if (variables.some(v => expression.toLowerCase().includes(`${v} log log`))) {
+        return baseValue * logLogBase;
+      }
+      return logLogBase;
     }
     if (expression.toLowerCase().includes('1.5') || expression.includes('{1.5}')) {
-      return n * Math.sqrt(n);
+      return baseValue * Math.sqrt(baseValue);
     }
     
-    return 0;
+    return baseValue; // Fallback to linear
   }
 };
 
-// Colors based on complexity
+// Dynamic color detection based on complexity patterns
 const getComplexityColor = (c) => {
   const s = c.toLowerCase();
   if (s.includes('1') || s.includes('constant')) return '#27ae60';
-  if (s.includes('log log')) return '#2980b9'; // Special case for log log patterns
-  if (s.includes('log') && !s.includes('n log')) return '#3498db';
-  if (s.includes('1.5') || s.includes('{1.5}')) return '#16a085'; // Special case for n^1.5
-  if (s.includes('n') && s.includes('m') && s.includes('*')) return '#e67e22';
-  if (s.includes('n') && s.includes('m') && s.includes('+')) return '#f39c12';
-  if (s.includes('n²') || s.includes('n^2')) return '#e67e22';
-  if (s.includes('n³') || s.includes('n^3')) return '#d35400';
-  if (s.includes('2^n') || s.includes('exponential')) return '#34495e';
-  if (s.includes('n!')) return '#8e44ad';
-  if (s.includes('n log n')) return '#9b59b6';
-  if (s.includes('n')) return '#e74c3c';
-  return '#7f8c8d';
+  if (s.includes('log log')) return '#2980b9';
+  if (s.includes('log') && !s.includes('log n') && !s.includes('log m') && !s.includes('log k')) return '#3498db';
+  if (s.includes('1.5') || s.includes('{1.5}')) return '#16a085';
+  if (s.includes('²') || s.includes('^2')) return '#e67e22';
+  if (s.includes('³') || s.includes('^3')) return '#d35400';
+  if (s.includes('2^') || s.includes('exponential')) return '#34495e';
+  if (s.includes('!')) return '#8e44ad';
+  if (s.includes('log')) return '#9b59b6'; // Any variable with log
+  return '#e74c3c'; // Linear for any variable
 };
 
 const formatComplexity = (c) =>
@@ -201,37 +213,41 @@ const CustomComplexityPlotter = ({
   step = 1,
   normalize = false
 }) => {
-  const usesM = useMemo(() => /m\b/i.test(complexity), [complexity]);
+  // Extract all variables dynamically
+  const variables = useMemo(() => extractVariables(complexity), [complexity]);
+  const primaryVariable = variables[0] || 'n'; // Use first variable as primary for display
 
   const data = useMemo(() => {
     let maxVal = 0;
-    // Start from n=4 for log log patterns, n=2 for log patterns, n=1 for others
+    
+    // Start from appropriate values based on complexity type
     const startN = complexity.toLowerCase().includes('log log') ? 4 : 
                    complexity.toLowerCase().includes('log') ? 2 : 1;
     
     // First pass: find max value
-    for (let n = startN; n <= maxN; n += step) {
-      const m = usesM ? Math.min(n, maxN) : n;
-      const val = safeEval(complexity, n, m);
+    for (let baseValue = startN; baseValue <= maxN; baseValue += step) {
+      const variableMappings = createVariableMappings(variables, baseValue);
+      const val = safeEval(complexity, baseValue, variableMappings);
       maxVal = Math.max(maxVal, val);
     }
 
-    console.log(`Max value for ${complexity}: ${maxVal}`); // Debug log
+    console.log(`Max value for ${complexity} with variables [${variables.join(', ')}]: ${maxVal}`);
 
     const arr = [];
     // Second pass: generate data points
-    for (let n = startN; n <= maxN; n += step) {
-      const m = usesM ? Math.min(n, maxN) : n;
-      const val = safeEval(complexity, n, m);
+    for (let baseValue = startN; baseValue <= maxN; baseValue += step) {
+      const variableMappings = createVariableMappings(variables, baseValue);
+      const val = safeEval(complexity, baseValue, variableMappings);
       arr.push({
-        n,
+        n: baseValue,
         value: normalize && maxVal ? val / maxVal : val,
-        normalizedValue: maxVal ? val / maxVal : 0
+        normalizedValue: maxVal ? val / maxVal : 0,
+        variables: variableMappings
       });
     }
 
     return arr;
-  }, [complexity, maxN, step, normalize, usesM]);
+  }, [complexity, maxN, step, normalize, variables]);
 
   const color = getComplexityColor(complexity);
 
@@ -248,6 +264,11 @@ const CustomComplexityPlotter = ({
       >
         {typeOfComplexity}
         {formatComplexity(complexity)}
+        {variables.length > 1 && (
+          <div style={{ fontSize: 10, color: '#888', marginTop: 4 }}>
+            Variables: {variables.join(', ')}
+          </div>
+        )}
       </div>
 
       <ResponsiveContainer width="100%" height="100%">
@@ -255,7 +276,16 @@ const CustomComplexityPlotter = ({
           data={data}
           margin={{ top: 20, right: 10, left: -60, bottom: 20 }}
         >
-          <XAxis dataKey="n" stroke="#888" fontSize={12} />
+          <XAxis 
+            dataKey="n" 
+            stroke="#888" 
+            fontSize={12}
+            label={{ 
+              value: variables.length > 1 ? variables.join(',') : primaryVariable, 
+              position: 'insideBottom', 
+              offset: -10 
+            }}
+          />
           <YAxis stroke="#888" fontSize={12} />
           <Tooltip
             contentStyle={{
@@ -269,7 +299,14 @@ const CustomComplexityPlotter = ({
               isNaN(v) ? '0' : normalize ? v.toFixed(4) : v.toFixed(2),
               n
             ]}
-            labelFormatter={(n) => `n = ${n}`}
+            labelFormatter={(baseValue, payload) => {
+              if (variables.length === 1) {
+                return `${primaryVariable} = ${baseValue}`;
+              } else if (variables.length > 1) {
+                return variables.map(v => `${v} = ${baseValue}`).join(', ');
+              }
+              return `input = ${baseValue}`;
+            }}
           />
           <Line
             type="monotone"

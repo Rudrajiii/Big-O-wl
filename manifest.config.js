@@ -11,11 +11,19 @@ export default {
     service_worker: "src/background/index.js",
     type: "module"
   },
+  web_accessible_resources: [
+  {
+    resources: ["src/content/leetcode-overlay.css"],
+    matches: ["<all_urls>"]
+  }
+],
   content_scripts: [
     {
-      matches: ["<all_urls>"],
-      js: ["src/content/index.js"],
-      run_at: "document_start",
+      matches: [
+        "<all_urls>"
+      ],
+      js: ["src/content/index.js","src/content/leetcode-injector.js"],
+      run_at: "document_idle",
       all_frames: true
     }
   ],

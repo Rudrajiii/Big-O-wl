@@ -19,9 +19,8 @@ import { IoArrowBack } from "react-icons/io5";
 import Toast from '../components/Toast.jsx';
 import { ImLeaf } from "react-icons/im";
 import { BiSolidMemoryCard } from "react-icons/bi";
-import MemoryAnalysis from '../components/MemoryAnalysis.jsx';
-import Test from '../components/test.jsx'; // Placeholder for future test feature
-import DynamicTest from '../components/DyanmicTest.jsx'
+import DynamicTest from '../components/CodeAnalyzer.jsx'
+
 /* ---------- groq client ---------- */
 const groq = new Groq({
   apiKey: import.meta.env.VITE_GROQ_API_KEY,
@@ -40,7 +39,6 @@ export default function App() {
   const [showLineComplexity, setShowLineComplexity] = useState(true);
   const [isComplexityDetermined, setIsComplexityDetermined] = useState(true);
   const [currentPage, setCurrentPage] = useState('main'); 
-  const [showMemoryAnalysis, setShowMemoryAnalysis] = useState('');
 
 
   // Toast state
@@ -164,7 +162,13 @@ const loadMemoryAnalysis = () => {
 };
 
   const analyzeMemory = async () => {
-  if (!selectedCode) return;
+  if (!selectedCode) {
+    showToast(
+      'Cannot show MEMORY stats when complexity is not determined.',
+      'warning'
+    );
+    return;
+  };
 
   // First check if we have cached memory analysis for this code
   try {
@@ -172,7 +176,7 @@ const loadMemoryAnalysis = () => {
       chrome.storage.local.get(['memoryAnalysis', 'analyzedCode'], (result) => {
         if (result.memoryAnalysis && result.analyzedCode === selectedCode) {
           // Use cached data
-          setShowMemoryAnalysis(JSON.stringify(result.memoryAnalysis));
+          // setShowMemoryAnalysis(JSON.stringify(result.memoryAnalysis));
           showToast('Loaded cached memory analysis!', 'info');
           navigateToPage('memory');
           return;
@@ -191,7 +195,7 @@ const loadMemoryAnalysis = () => {
 };
 
 const performMemoryAnalysis = async () => {
-  setShowMemoryAnalysis('');
+  // setShowMemoryAnalysis('');
   if(!isComplexityDetermined){
     showToast(
       'Cannot show MEMORY stats when complexity is not determined.',
@@ -275,7 +279,7 @@ const performMemoryAnalysis = async () => {
       }
     }
     
-    setShowMemoryAnalysis(answer);
+    // setShowMemoryAnalysis(answer);
     
     // Store memory analysis in local storage (override previous)
     try {
@@ -307,7 +311,7 @@ const performMemoryAnalysis = async () => {
       errorMsg = '⚠️ Network error. Please check your connection and try again.';
     }
     
-    setShowMemoryAnalysis(errorMsg);
+    // setShowMemoryAnalysis(errorMsg);
     showToast('Failed to analyze memory usage. Please try again.', 'error');
   }
 };
@@ -329,12 +333,12 @@ const performMemoryAnalysis = async () => {
       
       // Clear memory analysis when code changes
       if (newCode !== selectedCode) {
-        setShowMemoryAnalysis('');
+        // setShowMemoryAnalysis('');
       }
       }
       // Listen for memory analysis updates
     if (changes.memoryAnalysis) {
-      setShowMemoryAnalysis(changes.memoryAnalysis.newValue || '');
+      // setShowMemoryAnalysis(changes.memoryAnalysis.newValue || '');
     }
     };
 
@@ -416,13 +420,6 @@ const performMemoryAnalysis = async () => {
 }, [result]);
 
   function navigateToPage(page) {
-  if(!isComplexityDetermined){
-    showToast(
-      'Cannot show MEMORY stats when complexity is not determined.',
-      'warning'
-    );
-    return;
-  }
   setCurrentPage(page);
 }
 
@@ -574,7 +571,7 @@ const performMemoryAnalysis = async () => {
                   Contribute
                 </span>
                 <span> <ImLeaf size={18} style={{verticalAlign:'middle',marginLeft:'4px',color:'#51e886' , marginBottom:'4px'}}/> </span>
-                <span className="discord">
+                <span onClick={() => window.open('https://discord.gg/j7QP2AUr')} className="discord">
                   Join Our Discord
                 </span>
               </p>
@@ -599,11 +596,6 @@ const performMemoryAnalysis = async () => {
         <PayMePage />
       )}
 
-      {/* {
-        currentPage === 'test' && (
-          <DynamicTest />
-        )
-      } */}
     </div>
     </>
   );
