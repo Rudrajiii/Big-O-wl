@@ -1,3 +1,4 @@
+import { groqApiKey } from "../config/groqKey";
 const sysPrompt = `
         You are an expert algorithm complexity analyzer. Your ONLY job is to analyze algorithmic code snippets.
         STRICT RULES:
@@ -30,7 +31,7 @@ const sysPrompt = `
 export const analyzeComplexity = async (code) => {
     try {
       console.log('🦉 Analyzing complexity with Groq...');
-      const groqApiKey = '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';
+      
       if (!groqApiKey) {
         throw new Error('Groq API key not found');
       }

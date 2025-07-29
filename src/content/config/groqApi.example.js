@@ -1,0 +1,1 @@
+export const groqApiKey = 'enter your key , come on man its free.';
