@@ -20,12 +20,14 @@ import Toast from '../components/Toast.jsx';
 import { ImLeaf } from "react-icons/im";
 import { BiSolidMemoryCard } from "react-icons/bi";
 import DynamicTest from '../components/CodeAnalyzer.jsx'
+import { FaCodeMerge } from "react-icons/fa6";
+
 
 /* ---------- groq client ---------- */
-const groq = new Groq({
-  apiKey: import.meta.env.VITE_GROQ_API_KEY,
-  dangerouslyAllowBrowser: true
-});
+// const groq = new Groq({
+//   apiKey: import.meta.env.VITE_GROQ_API_KEY,
+//   dangerouslyAllowBrowser: true
+// });
 
 export default function App() {
   const [selectedCode, setSelectedCode] = useState('');
@@ -39,7 +41,7 @@ export default function App() {
   const [showLineComplexity, setShowLineComplexity] = useState(true);
   const [isComplexityDetermined, setIsComplexityDetermined] = useState(true);
   const [currentPage, setCurrentPage] = useState('main'); 
-
+  // const [state, setState] = useState({ show: true });
 
   // Toast state
   const [toast, setToast] = useState({
@@ -115,21 +117,37 @@ export default function App() {
     if (!selectedCode) return;
     
     setIsLoading(true);
-    setResult(''); // Reset previous result
-    
-    try {
-      const chat = await groq.chat.completions.create({
-        model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-        temperature: 0,
-        max_completion_tokens: 128,
-        messages: [
-          { role: 'system',    content: sysPrompt.trim() },
-          { role: 'user',      content: selectedCode }
-        ]
-      });
+    setResult('');
 
-      const answer = chat.choices[0]?.message?.content?.trim() || '';
-      setResult(answer);
+    try {
+      const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
+      if (!groqApiKey) {
+              throw new Error('Groq API key not found');
+            }
+            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${groqApiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'meta-llama/llama-4-scout-17b-16e-instruct',
+                temperature: 0,
+                max_completion_tokens: 128,
+                messages: [
+                  { role: 'system', content: sysPrompt.trim() },
+                  { role: 'user', content: selectedCode }
+                ]
+              })
+            });
+      
+            if (!response.ok) throw new Error(`Groq API error: ${response.status}`);
+            const data = await response.json();
+            const content = data.choices[0]?.message?.content?.trim() || '';
+            // console.log('🦉 Groq response:', content);
+            console.log(">> worked fine")
+            
+      setResult(content);
     } catch (err) {
       console.error('Groq error', err);
       setResult('⚠️ Error contacting Groq API.');
@@ -435,7 +453,8 @@ const performMemoryAnalysis = async () => {
       />
       <div className="popup-container" style={{ display: isInitialLoading ? 'none' : 'flex' }}>
         <div className="header">
-          <h1>Big<span className="animated-o">(O)</span>wl</h1>
+          
+            <h1>Big<span className="animated-o">(O)</span>wl</h1>
           {currentPage === 'main' ? (
             <button className="pay-me-if-u-r-kind" onClick={handlePayMeClick}>
               <LuHeartHandshake size={28} style={{verticalAlign:'middle', color:'#DA3E44', padding:'4px 8px'}}/>
@@ -447,6 +466,7 @@ const performMemoryAnalysis = async () => {
             </button>
           )}
         </div>
+        
 
       {currentPage === 'main' && (
         <section className="codes">
@@ -578,12 +598,31 @@ const performMemoryAnalysis = async () => {
             </div>
           </div>
         ) : (
+          
           <div className="no-code">
-            <p>📝 Highlight code on any page to analyze time/space complexity.</p>
-            <p className="instruction">
-              Simply select any code snippet on a webpage, and it will appear here automatically!
+            <p className="instruction">Simply select or Highlight any code snippet
+                or a code on webpage, and it will appear here automatically then it's ready to analyze the complexity & get insights.
             </p>
+            <div>
+              <FaCodeMerge size={80}/>
+            </div>
+            <p className="instruction">
+               Currently you donot have any code selected. please select & proceed with analysis.
+            </p>
+            <div className="footer">
+              
+              <p>
+                <span onClick={() => window.open('https://github.com/Rudrajiii/Big-O-wl', '_blank')} className="github">
+                  Contribute
+                </span>
+                <span> <ImLeaf size={18} style={{verticalAlign:'middle',marginLeft:'4px',color:'#51e886' , marginBottom:'4px'}}/> </span>
+                <span onClick={() => window.open('https://discord.gg/j7QP2AUr')} className="discord">
+                  Join Our Discord
+                </span>
+              </p>
+            </div>
           </div>
+          
         )}
         </section>
       )}

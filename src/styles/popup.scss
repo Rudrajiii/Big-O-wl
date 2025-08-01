@@ -365,8 +365,14 @@
     }
     
     .no-code {
-      padding: 2rem;
+      padding: 1rem;
       text-align: center;
+      display: flex;
+      gap:1rem;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 70vh;
       
       p {
         margin: 0.5rem 0;

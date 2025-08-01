@@ -325,9 +325,12 @@ const Test = () => {
                         </Pie>
                         <Tooltip 
                           contentStyle={{ 
-                            background: '#262626', 
+                            background: '#323131ff', 
                             border: '1px solid #00b8a3',
-                            borderRadius: '8px',
+                            borderRadius: '8px'
+                          }}
+                          
+                          itemStyle={{
                             color: '#ffffff'
                           }}
                         />
@@ -497,7 +500,7 @@ const Test = () => {
                 <Zap className="test-section__icon" />
                 <h3>Optimization Suggestions</h3>
                 <span className="test-section__badge test-section__badge--info">
-                  {optimizationSuggestions.design.length} Suggestions
+                  {Object.keys(optimizationSuggestions).length} Suggestions
                 </span>
               </div>
               {expandedSections.optimizations ? <ChevronDown /> : <ChevronRight />}
@@ -506,13 +509,59 @@ const Test = () => {
               <div className="test-section__content">
                 <div className="test-section__subsection">
                   <h4>Design Improvements:</h4>
-                  {optimizationSuggestions.design.map((suggestion, index) => (
+                  { 
+                  optimizationSuggestions.design && optimizationSuggestions.design.length > 0 ? (
+                    optimizationSuggestions.design.map((suggestion, index) => (
+                      <div key={index} className="test-section__list-item test-section__list-item--info">
+                        <TrendingUp size={16} />
+                        {suggestion}
+                      </div>
+                    )) 
+                  ) : (
+                    <div style={{color:'#2CB959'}} className="test-section__list-item test-section__list-item--info">
+                      <TrendingUp size={16} />
+                      No Design Improvements needed
+                    </div>
+                  )
+                  }
+                </div>
+                <div className="test-section__subsection">
+                  <h4>Memory Improvements:</h4>
+                  {optimizationSuggestions.memory && optimizationSuggestions.memory.length > 0 ? (
+                    optimizationSuggestions.memory.map((suggestion, index) => (
                     <div key={index} className="test-section__list-item test-section__list-item--info">
                       <TrendingUp size={16} />
                       {suggestion}
                     </div>
-                  ))}
+                  ))
+                  ) : (
+                    <div style={{color:'#2CB959'}} className="test-section__list-item test-section__list-item--info">
+                      <TrendingUp size={16} />
+                      No Memory Improvements needed
+                    </div>
+                  )
+                  
+                  }
                 </div>
+                <div className="test-section__subsection">
+                  <h4>Performance Improvements:</h4>
+                  {
+                  optimizationSuggestions.performance && optimizationSuggestions.performance.length > 0 ? (
+                    optimizationSuggestions.performance.map((suggestion, index) => (
+                      <div key={index} className="test-section__list-item test-section__list-item--info">
+                        <TrendingUp size={16} />
+                        {suggestion}
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{color:'#2CB959'}} className="test-section__list-item test-section__list-item--info">
+                      <TrendingUp size={16} />
+                      No Performance Improvements needed
+                    </div>
+                  )
+                  }
+                </div>
+                
               </div>
             )}
           </div>

@@ -49,21 +49,21 @@ Return this EXACT JSON structure with your analysis:
     "extensibility": "Easily extendable / Hard to extend"
   },
   "potential_issues": {
-    "bugs": 'Array of bugs if any (eg. ["Incorrect index access", "Off-by-one error"])',
-    "edge_cases": 'Array of edge cases if any (eg. ["Empty input", "Large input", "Duplicate data"])',
-    "performance_issues": 'Array of performance issues if any (eg. ["Nested loop inside a recursion"])',
+    "bugs": 'Array of bugs if any ',
+    "edge_cases": 'Array of edge cases if any ',
+    "performance_issues": 'Array of performance issues if any ',
     "security": ["None / Possible injection / Unsafe eval"]
   },
   "optimization_suggestions": {
-    "memory": 'Array of memory optimization suggestions if any (eg. ["Use generator instead of list", "Avoid unnecessary temp variables"])',
-    "performance": 'Array of performance suggestion if any (eg. ["Replace nested loops with hash map", "Use binary search instead of linear"])',
-    "design": 'Array of desgin suggestion if any (eg. ["Split function into smaller parts", "Add docstrings and type hints"])'
+    "memory": 'Array of memory optimization suggestions if any ',
+    "performance": 'Array of performance suggestion if any ',
+    "design": 'Array of design suggestion if any '
   },
   "final_rating": {
     "efficiency_score": 8,
     "readability_score": 7,
     "scalability_score": 9,
-    "overall_comment": "Efficient and clean code, but could be improved with better naming and modularity."
+    "overall_comment": "give a short comment on the overall quality of the code in 20 words"
   }
 }
   IMPORTANT: 

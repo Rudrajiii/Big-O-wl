@@ -1,11 +1,12 @@
 import React from 'react';
-import { FaHeart, FaRegHeart } from 'react-icons/fa';
+import { FaRegHeart } from 'react-icons/fa';
 import { SiBuymeacoffee } from "react-icons/si";
 import QRCode from 'react-qr-code';
 import { TbCopy } from "react-icons/tb";
 import __tick__ from '../assets/tick.svg';
 import { RiLinksFill } from "react-icons/ri";
 import __dev__ from '../assets/dev.jpg';
+import { SiSolana } from "react-icons/si";
 import '../styles/payMe.scss';
 
 
@@ -14,6 +15,7 @@ const PayMePage = () => {
   const DEV_NAME = 'Rudra Saha';
   const AFTER_MSG = 'Thank you for your support!';
   const [isCopied, setIsCopied] = React.useState(false);
+  const [isSolanaCopied, setIsSolanaCopied] = React.useState(false);
   
   const copyUpiId = () => {
     navigator.clipboard.writeText(UPI_ID).then(() => {
@@ -25,12 +27,23 @@ const PayMePage = () => {
     });
   };
 
+  const copySolanaAddress = () => {
+    const solanaAddress = "B5sKfZFdpiUApFinrwqoG5c4REYsS7d7mfA1J2U65BKH";
+    navigator.clipboard.writeText(solanaAddress).then(() => {
+      setIsSolanaCopied(true);
+      setTimeout(() => setIsSolanaCopied(false), 2000);
+      console.log('Solana address copied to clipboard!');
+    }).catch(err => {
+      console.error('Failed to copy Solana address: ', err);
+    });
+  };
+
   const upiUrl = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent(DEV_NAME)}&tn=${encodeURIComponent(AFTER_MSG)}&cu=INR`;
 
   return (
     <div className="pay-me-content">
       <div className="pay-me-header">
-        <FaHeart className="heart-icon" />
+        <FaRegHeart className="heart-icon" style={{background:'#472437c4', padding:'8px', borderRadius:'5px'}}/>
         <h2>Support Big(O)wl Development</h2>
         <p style={{marginBottom:'6px'}}>Help keep this project alive and growing!</p>
         <p onClick={() => window.open('https://github.com/Rudrajiii/Big-O-wl', '_blank')} style={{ padding: '4px 10px', cursor:'pointer', background:'rgba(255, 255, 255, 0.1)',  borderRadius: '5px', width: 'fit-content' , margin:'auto'}}>
@@ -47,10 +60,20 @@ const PayMePage = () => {
           </h3>
         </div>
 
-        <div className="support-card github-center">
-          <FaRegHeart className="card-icon -type-github" />
-          <h3>Become a GitHub sponsor
-            <RiLinksFill size={20} style={{ verticalAlign:'middle', marginLeft:'4px' }}/>
+        <div className="support-card github-center" onClick={copySolanaAddress}>
+          <SiSolana className="card-icon -type-github" />
+          <h3>{
+            isSolanaCopied ? (
+              <div>
+                Solana Address Copied
+                <img src={__tick__} alt="Copied" style={{ marginLeft: '4px' , verticalAlign:'middle' ,fontSize:'20px'}} />
+              </div>
+            ) : (
+              <div>
+                Send SOLANA
+                <TbCopy size={20} style={{ verticalAlign:'middle', marginLeft:'4px' }}/>
+              </div>
+            )}
           </h3>
         </div>
 
@@ -110,8 +133,8 @@ const PayMePage = () => {
 
 
       <div className="thank-you">
-        <FaHeart className="thank-you-heart" />
-        <h3>Thank you for your support! ❤️</h3>
+        <FaRegHeart className="thank-you-heart" style={{background:'#472437c4', padding:'8px', borderRadius:'5px'}}/>
+        <h3>Thank you for your support! <FaRegHeart size={18} style={{verticalAlign:'middle' , color:'#ff6b6b'}}/></h3>
         <p>Every contribution helps make Big(O)wl better for the entire developer community.</p>
       </div>
     </div>

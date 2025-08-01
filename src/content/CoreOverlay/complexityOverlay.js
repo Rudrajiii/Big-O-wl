@@ -184,54 +184,117 @@ export const showTheComplexityOverlay = async () => {
       windowElement.classList.add('visible');
     }, 150);
 
+    
     // Analyze complexity if code exists
     if (extractedCode) {
-      try {
-        const complexityResult = await analyzeComplexity(extractedCode);
-        analysisArea.innerHTML = '';
-
-        const isComplexityDetermined = !complexityResult.includes("Cannot determine");
-
-        if (isComplexityDetermined) {
-          const timeComplexity = getComplexityHighlight(complexityResult, true);
-          const spaceComplexity = getComplexityHighlight(complexityResult, false);
-
-          // Create multi-page visualizer with charts
-          const visualizer = createComplexityVisualizer(timeComplexity, spaceComplexity);
-          analysisArea.appendChild(visualizer);
+  try {
+    let complexityResult = await analyzeComplexity(extractedCode);
+    analysisArea.innerHTML = '';
+    
+    let isComplexityDetermined = !complexityResult.includes("Cannot determine");
+    
+    // If primary analysis fails, try backup code
+    if (!isComplexityDetermined) {
+      console.log("Primary analysis failed, trying backup code...");
+      
+      const backupCode = await new Promise((resolve) => {
+        if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+          chrome.storage.local.get(['selectedCode'], (result) => {
+            resolve(result.selectedCode || null);
+          });
         } else {
-          analysisArea.innerHTML = `
-            <div style="
-              text-align: center; 
-              color: rgba(255, 255, 255, 0.8);
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              gap: 20px;
-            ">
-              <div style="font-size: 48px;">⚠️</div>
-              <div style="font-size: 20px; font-weight: 400;">We are unable to extract the code this time . please just select the code section and go the extension for details.</div>
-              <div style="font-size: 16px; color: rgba(255, 255, 255, 0.6);">This code snippet may not contain algorithmic patterns</div>
-            </div>
-          `;
+          resolve(null);
         }
+      });
+      
+      console.log("Backup code:", backupCode);
+      
+      if (backupCode && backupCode.trim().length > 0) {
+        console.log("Analyzing backup code...");
+        complexityResult = await analyzeComplexity(backupCode);
+        isComplexityDetermined = !complexityResult.includes("Cannot determine");
+        console.log("Backup analysis result:", isComplexityDetermined);
+      }
+    }
+    
+    // Now decide what to show based on final analysis result
+    if (isComplexityDetermined) {
+      console.log("Analysis successful, creating visualizer...");
+      const timeComplexity = getComplexityHighlight(complexityResult, true);
+      const spaceComplexity = getComplexityHighlight(complexityResult, false);
 
-      } catch (error) {
-        console.error('🦉 Analysis error:', error);
-        analysisArea.innerHTML = `
-          <div style="
-            text-align: center; 
-            color: rgba(255, 255, 255, 0.8);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-          ">
-            <div style="font-size: 48px;">❌</div>
-            <div style="font-size: 20px; font-weight: 400;">Analysis Failed</div>
-            <div style="font-size: 16px; color: rgba(255, 255, 255, 0.6);">${error.message}</div>
+      // Create multi-page visualizer with charts
+      const visualizer = createComplexityVisualizer(timeComplexity, spaceComplexity);
+      analysisArea.appendChild(visualizer);
+    } else {
+      // Both primary and backup analysis failed
+      console.log("Both analyses failed, showing fallback message...");
+      analysisArea.innerHTML = `
+        <div style="
+          text-align: center; 
+          color: rgba(255, 255, 255, 0.8);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 20px;
+        ">
+          <div>
+            <svg width="100" height="100" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" fill="#FFA116"/>
+            </svg>
           </div>
-        `;
+          <div style="font-size: 25px; font-weight: 600;">Oops!! auto extraction failed</div>
+          <div style="font-size: 18px; color: rgba(255, 255, 255, 0.6);">Please select your code and try again</div>
+          <div style="
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            max-width: 400px;
+            text-align: center;
+          ">
+            💡Tip: You Can Also Move To The Extension For Analysis.
+          </div>
+        </div>
+      `;
+    }
+
+  } catch (error) {
+    console.error('🦉 Analysis error:', error);
+    analysisArea.innerHTML = `
+      <div style="
+        text-align: center; 
+        color: rgba(255, 255, 255, 0.8);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      ">
+        <div>
+          <svg width="100" height="100" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z" fill="#ff4444"/>
+          </svg>
+        </div>
+        <div style="font-size: 25px; font-weight: 600;">Analysis Failed</div>
+        <div style="font-size: 16px; color: rgba(255, 255, 255, 0.6);">${error.message}</div>
+      </div>
+    `;
+  }
+}
+
+
+  if( extractedCode ) {
+      try{
+        if(typeof chrome !== "undefined" && chrome.storage && chrome.storage.local){
+        chrome.storage.local.set({
+          selectedCode : extractedCode
+        })
+        console.log("stored extracted code ://") //debug k liye
+      }}
+      catch(storageError){
+        console.error("erorr := ", storageError);
       }
     }
 

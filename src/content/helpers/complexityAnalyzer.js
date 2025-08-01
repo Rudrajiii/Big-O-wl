@@ -65,11 +65,13 @@ export const analyzeComplexity = async (code) => {
 
 // Extract complexity values
 export const getComplexityHighlight = (result, showTime = true) => {
-    if (!result || result.includes("Cannot determine")) return 'O(n)';
+    if (!result || result.includes("Cannot determine")) return '';
+    // if (!result || result.includes("Cannot determine")) return 'O(n)';
     const lines = result.split('\n');
     const timeLine = lines.find(line => line.includes('Time Complexity'));
     const spaceLine = lines.find(line => line.includes('Space Complexity'));
-    if (!timeLine || !spaceLine) return 'O(n)';
+    if (!timeLine || !spaceLine) return '';
+    // if (!timeLine || !spaceLine) return 'O(n)';
     const timeComplexity = timeLine.split('=')[1]?.trim();
     const spaceComplexity = spaceLine.split('=')[1]?.trim();
     return showTime ? timeComplexity : spaceComplexity;

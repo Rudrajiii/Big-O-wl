@@ -72,6 +72,21 @@ const safeEval = (expression, baseValue, variableMappings = {}) => {
       expr = expr.replace(new RegExp(`${v}\\s*√\\s*${v}`, 'g'), `${v} * sqrt(${v})`);
       expr = expr.replace(new RegExp(`√\\s*${v}`, 'g'), `sqrt(${v})`);
       
+
+      // Handle log with specific bases (e.g., log3, log10, log2)
+      expr = expr.replace(new RegExp(`${v}\\s*log(\\d+)\\s*\\(\\s*${v}\\s*\\)`, 'g'), (match, base) => {
+        return `${v} * (log(${v}) / log(${base}))`;
+      });
+      expr = expr.replace(new RegExp(`${v}\\s*log(\\d+)\\s*${v}`, 'g'), (match, base) => {
+        return `${v} * (log(${v}) / log(${base}))`;
+      });
+      expr = expr.replace(new RegExp(`log(\\d+)\\s*\\(\\s*${v}\\s*\\)`, 'g'), (match, base) => {
+        return `(log(${v}) / log(${base}))`;
+      });
+      expr = expr.replace(new RegExp(`log(\\d+)\\s*${v}`, 'g'), (match, base) => {
+        return `(log(${v}) / log(${base}))`;
+      });
+
       // Handle log log patterns (most specific first)
       expr = expr.replace(new RegExp(`${v}\\s*log\\s*log\\s*${v}`, 'g'), `${v} * log(log(${v}))`);
       expr = expr.replace(new RegExp(`log\\s*log\\s*${v}`, 'g'), `log(log(${v}))`);
@@ -149,6 +164,17 @@ const safeEval = (expression, baseValue, variableMappings = {}) => {
         }
         return logLogBase;
       }
+
+      // For different log bases
+      const logBaseMatch = expression.match(/log(\d+)/);
+      if (logBaseMatch) {
+        const base = parseInt(logBaseMatch[1]);
+        const logValue = Math.log(baseValue) / Math.log(base);
+        if (variables.some(v => expression.toLowerCase().includes(`${v} log${base}`))) {
+          return baseValue * logValue;
+        }
+        return logValue;
+      }
       
       // For ^1.5 patterns
       if (expression.toLowerCase().includes('1.5') || expression.includes('{1.5}')) {
@@ -172,6 +198,16 @@ const safeEval = (expression, baseValue, variableMappings = {}) => {
       }
       return logLogBase;
     }
+    // Handle different log bases in fallback
+    const logBaseMatch = expression.match(/log(\d+)/);
+    if (logBaseMatch) {
+      const base = parseInt(logBaseMatch[1]);
+      const logValue = Math.log(baseValue) / Math.log(base);
+      if (variables.some(v => expression.toLowerCase().includes(`${v} log${base}`))) {
+        return baseValue * logValue;
+      }
+      return logValue;
+    }
     if (expression.toLowerCase().includes('1.5') || expression.includes('{1.5}')) {
       return baseValue * Math.sqrt(baseValue);
     }
@@ -185,6 +221,7 @@ const getComplexityColor = (c) => {
   const s = c.toLowerCase();
   if (s.includes('1') || s.includes('constant')) return '#27ae60';
   if (s.includes('log log')) return '#2980b9';
+  if (s.match(/log\d+/)) return '#3498db';
   if (s.includes('log') && !s.includes('log n') && !s.includes('log m') && !s.includes('log k')) return '#3498db';
   if (s.includes('1.5') || s.includes('{1.5}')) return '#16a085';
   if (s.includes('²') || s.includes('^2')) return '#e67e22';
@@ -202,7 +239,8 @@ const formatComplexity = (c) =>
     .replace(/\^n/g, 'ⁿ')
     .replace(/\^\{([^}]+)\}/g, '^$1') // Convert {1.5} to 1.5 for display
     .replace(/\*/g, '×')
-    .replace(/\bsqrt\b/gi, '√');
+    .replace(/\bsqrt\b/gi, '√')
+    .replace(/log(\d+)/g, 'log₍$1₎');
 
 /* ───────────────────────── Main Component ───────────────────────── */
 
