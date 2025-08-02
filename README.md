@@ -1,10 +1,11 @@
 <p align="center">
 <!--   <img src="src/assets/Big(O)wl.png" alt="Big(O)wl Logo" width="150" /> -->
-<img width="945" height="305" alt="image" src="https://github.com/user-attachments/assets/69ade911-08ae-477c-843b-c21b228f530f" />
+<img width="960" height="318" alt="image" src="https://github.com/user-attachments/assets/9b29b3cf-14f3-426a-85aa-b6aebe2cf909" />
+
 </p>
 
 <div align="center">
-  <h1 align="center">Big(O)wl 🦉</h1>
+<!--   <h1 align="center">Big(O)wl 🦉</h1> -->
   <em>Know the Big O before your code says Uh-oh!</em><br/>
   <strong>A Chrome Extension to instantly analyze your code's Time & Space Complexity</strong>
 </div>
