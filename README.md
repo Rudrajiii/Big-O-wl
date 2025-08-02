@@ -1,5 +1,6 @@
 <p align="center">
-  <img src="src/assets/Big(O)wl.png" alt="Big(O)wl Logo" width="150" />
+<!--   <img src="src/assets/Big(O)wl.png" alt="Big(O)wl Logo" width="150" /> -->
+<img width="945" height="305" alt="image" src="https://github.com/user-attachments/assets/69ade911-08ae-477c-843b-c21b228f530f" />
 </p>
 
 <div align="center">
