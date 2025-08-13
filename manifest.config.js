@@ -13,7 +13,7 @@ export default {
   },
   web_accessible_resources: [
   {
-    resources: ["src/content/leetcode-overlay.css"],
+    resources: ["src/content/leetcode-overlay.css" , "src/assets/catty.webp"],
     matches: ["<all_urls>"]
   }
 ],
@@ -22,16 +22,26 @@ export default {
       matches: [
         "<all_urls>"
       ],
-      js: ["src/content/index.js","src/content/leetcode-injector.js"],
+      js: ["src/content/index.js","src/content/leetcode-injector.js" ],
       run_at: "document_idle",
       all_frames: true
     }
   ],
-  permissions: ["scripting", "activeTab", "storage", "contextMenus"],
+  permissions: ["scripting", "activeTab", "storage", "contextMenus", "declarativeNetRequest",
+    "declarativeNetRequestFeedback","tabs"],
   host_permissions: ["<all_urls>"],
   icons: {
     16: "icons/icon16.png",
     48: "icons/icon48.png",
     128: "icons/icon128.png"
+  },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
   }
 };

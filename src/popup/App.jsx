@@ -6,7 +6,6 @@ import __star__ from '../assets/stars.svg';
 import __tick__ from '../assets/tick.svg';
 import __loading__ from '../assets/3dx-rotate.gif';
 import { FaTrashRestoreAlt } from "react-icons/fa";
-import Groq from 'groq-sdk';
 import ComplexityVisualizer from '../components/ComplexityVisualizer.jsx'; 
 import LoadingScreen from '../components/LoadingScreen.jsx';
 import PayMePage from '../components/PayMePage.jsx';
@@ -21,6 +20,7 @@ import { ImLeaf } from "react-icons/im";
 import { BiSolidMemoryCard } from "react-icons/bi";
 import DynamicTest from '../components/CodeAnalyzer.jsx'
 import { FaCodeMerge } from "react-icons/fa6";
+import { groqResponse } from '../content/helpers/groqResponse.js';
 
 
 /* ---------- groq client ---------- */
@@ -121,31 +121,9 @@ export default function App() {
 
     try {
       const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
-      if (!groqApiKey) {
-              throw new Error('Groq API key not found');
-            }
-            const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${groqApiKey}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-                temperature: 0,
-                max_completion_tokens: 128,
-                messages: [
-                  { role: 'system', content: sysPrompt.trim() },
-                  { role: 'user', content: selectedCode }
-                ]
-              })
-            });
+      const content = await groqResponse(groqApiKey, 128, sysPrompt, selectedCode);
       
-            if (!response.ok) throw new Error(`Groq API error: ${response.status}`);
-            const data = await response.json();
-            const content = data.choices[0]?.message?.content?.trim() || '';
-            // console.log('🦉 Groq response:', content);
-            console.log(">> worked fine")
+      console.log(">> worked fine");
             
       setResult(content);
     } catch (err) {
@@ -169,7 +147,7 @@ const loadMemoryAnalysis = () => {
         
         if (result.memoryAnalysis && result.analyzedCode === selectedCode) {
           // Store the parsed JSON as string for display
-          setShowMemoryAnalysis(JSON.stringify(result.memoryAnalysis));
+          // setShowMemoryAnalysis(JSON.stringify(result.memoryAnalysis));
           console.log('Loaded memory analysis from storage:', result.memoryAnalysis);
         }
       });
@@ -224,17 +202,13 @@ const performMemoryAnalysis = async () => {
   showToast('Analyzing memory usage...', 'info');
   
   try {
-    const chat = await groq.chat.completions.create({
-      model: 'meta-llama/llama-4-scout-17b-16e-instruct',
-      temperature: 0,
-      max_completion_tokens: 4096,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT_FOR_MEM_ANALYSIS.trim() },
-        { role: 'user', content: selectedCode }
-      ]
-    });
 
-    const answer = chat.choices[0]?.message?.content?.trim() || '';
+    const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
+    const answer = await groqResponse(groqApiKey, 4096, SYSTEM_PROMPT_FOR_MEM_ANALYSIS, selectedCode);
+      
+    console.log(">> worked fine for analyzing code too");
+
+    
     
     // More aggressive JSON extraction
     let safeJson = answer;
@@ -454,7 +428,7 @@ const performMemoryAnalysis = async () => {
       <div className="popup-container" style={{ display: isInitialLoading ? 'none' : 'flex' }}>
         <div className="header">
           
-            <h1>Big<span className="animated-o">(O)</span>wl</h1>
+            <h1 id="gamify-font">Big<span className="animated-o">(O)</span>wl</h1>
           {currentPage === 'main' ? (
             <button className="pay-me-if-u-r-kind" onClick={handlePayMeClick}>
               <LuHeartHandshake size={28} style={{verticalAlign:'middle', color:'#DA3E44', padding:'4px 8px'}}/>
@@ -485,13 +459,13 @@ const performMemoryAnalysis = async () => {
                       {showPlot ? 'Hide Plot' : 'Plot the complexity'}
                     </p>
                     <p onClick={analyzeMemory} style={{margin:0, cursor:'pointer', color:'#FFA116',background:'#342a19ff',padding:'6px 9px',borderRadius:'10px',fontSize:'12px',fontWeight:'400'}}>
-                      <BiSolidMemoryCard size={16} style={{verticalAlign:'middle',marginBottom:'1px'}} />
+                      Deep Analysis <BiSolidMemoryCard size={16} style={{verticalAlign:'middle',marginBottom:'1px',marginLeft:'3px'}} />
                     </p>
                     </h4>
                     <button onClick={removeResultSection} id='cancel'>
                       {
                         emoji ? '⚔️' : <span onClick={() => togglePlot(isComplexityDetermined)}>
-                           👈🏻
+                          👈🏻
                         </span>
                       }
                     </button>
@@ -606,7 +580,9 @@ const performMemoryAnalysis = async () => {
             <div>
               <FaCodeMerge size={80}/>
             </div>
+            
             <p className="instruction">
+               <span style={{color:'red'}}>if the code doesn't get copied on selection just reopen your browser & it will work fine.</span><br />
                Currently you donot have any code selected. please select & proceed with analysis.
             </p>
             <div className="footer">
