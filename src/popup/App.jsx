@@ -21,9 +21,10 @@ import { BiSolidMemoryCard } from "react-icons/bi";
 import DynamicTest from '../components/CodeAnalyzer.jsx'
 import { FaCodeMerge } from "react-icons/fa6";
 import { groqResponse } from '../content/helpers/groqResponse.js';
+import GroqKeySettings from '../components/GroqKeySettings.jsx';
 
 
-/* ---------- groq client ---------- */
+/* ---------- test groq client ---------- */
 // const groq = new Groq({
 //   apiKey: import.meta.env.VITE_GROQ_API_KEY,
 //   dangerouslyAllowBrowser: true
@@ -41,7 +42,24 @@ export default function App() {
   const [showLineComplexity, setShowLineComplexity] = useState(true);
   const [isComplexityDetermined, setIsComplexityDetermined] = useState(true);
   const [currentPage, setCurrentPage] = useState('main'); 
-  // const [state, setState] = useState({ show: true });
+  const [showKeySettings , setShowKeySettings] = useState(true);
+  const [errorCheck , setErrorCheck] = useState(false);
+
+
+  useEffect(() => {
+    chrome.storage.local.get(['groq_api_key', 'guest_mode'], (data) => {
+      // Show key settings only if neither a key nor guest mode is set
+      if ((data.groq_api_key && !data.guest_mode) || data.guest_mode) {
+        setShowKeySettings(false);
+      } else {
+        setShowKeySettings(true);
+      }
+    });
+  }, []);
+
+  // Listen for changes from GroqKeySettings to hide the settings after selection
+  const handleKeySet = () => setShowKeySettings(false);
+
 
   // Toast state
   const [toast, setToast] = useState({
@@ -120,7 +138,18 @@ export default function App() {
     setResult('');
 
     try {
-      const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
+
+    /**
+     * @for_development_mode 
+     * {const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;}
+    */
+    // Await the key from storage
+    const groqApiKey = await new Promise((resolve) => {
+      chrome.storage.local.get(['groq_api_key'], (data) => {
+        resolve(data.groq_api_key);
+      });
+    });
+
       const content = await groqResponse(groqApiKey, 128, sysPrompt, selectedCode);
       
       console.log(">> worked fine");
@@ -128,7 +157,8 @@ export default function App() {
       setResult(content);
     } catch (err) {
       console.error('Groq error', err);
-      setResult('⚠️ Error contacting Groq API.');
+      setErrorCheck(true);
+      setResult('⚠️ Your Saved API is Wrong / Re-Enter Your Correct Key');
     } finally {
       setIsLoading(false);
     }
@@ -158,7 +188,7 @@ const loadMemoryAnalysis = () => {
 };
 
   const analyzeMemory = async () => {
-  if (!selectedCode) {
+  if (!selectedCode || errorCheck) {
     showToast(
       'Cannot show MEMORY stats when complexity is not determined.',
       'warning'
@@ -203,7 +233,17 @@ const performMemoryAnalysis = async () => {
   
   try {
 
-    const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;
+    /**
+     * @for_development_mode 
+     * {const groqApiKey = import.meta.env.VITE_GROQ_API_KEY;}
+     */
+    // Await the key from storage
+    const groqApiKey = await new Promise((resolve) => {
+      chrome.storage.local.get(['groq_api_key'], (data) => {
+        resolve(data.groq_api_key);
+      });
+    });
+
     const answer = await groqResponse(groqApiKey, 4096, SYSTEM_PROMPT_FOR_MEM_ANALYSIS, selectedCode);
       
     console.log(">> worked fine for analyzing code too");
@@ -369,7 +409,7 @@ const performMemoryAnalysis = async () => {
   }
 
   function togglePlot(isComplexityDetermined) {
-  if(!isComplexityDetermined){
+  if(!isComplexityDetermined || errorCheck) {
     showToast('Cannot toggle plot visibility when complexity is not determined.',
       'warning'
     );
@@ -417,15 +457,20 @@ const performMemoryAnalysis = async () => {
 
   return (
     <>
-      {isInitialLoading && <LoadingScreen />}
-      <Toast 
-        message={toast.message}
-        type={toast.type}
-        isVisible={toast.isVisible}
-        onClose={hideToast}
-        duration={4000}
-      />
+    {
+     showKeySettings ? (
+      <GroqKeySettings onKeySet={handleKeySet} />
+     ) : isInitialLoading ? (
+        <LoadingScreen />
+     ) : (
       <div className="popup-container" style={{ display: isInitialLoading ? 'none' : 'flex' }}>
+        <Toast 
+          message={toast.message}
+          type={toast.type}
+          isVisible={toast.isVisible}
+          onClose={hideToast}
+          duration={4000}
+        />
         <div className="header">
           
             <h1 id="gamify-font">Big<span className="animated-o">(O)</span>wl</h1>
@@ -612,6 +657,9 @@ const performMemoryAnalysis = async () => {
       )}
 
     </div>
+
+     )
+    }
     </>
   );
 }

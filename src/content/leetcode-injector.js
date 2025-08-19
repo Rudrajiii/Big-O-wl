@@ -193,7 +193,7 @@ import { showTheComplexityOverlay } from './CoreOverlay/complexityOverlay.js';
           { name: 'ChatGPT', url: 'chatgpt.com' },
           { name: 'Gemini (Bard)', url: 'gemini.google.com' },
           { name: 'Claude', url: 'claude.ai' },
-          { name: 'YouTube', url: 'youtube.com' },
+          { name: 'YouTube', url: 'www.youtube.com' },
           { name: 'Perplexity', url: 'www.perplexity.ai' },
           { name: 'Phind', url: 'www.phind.com' },
           { name: 'Stack Overflow', url: 'stackoverflow.com' }

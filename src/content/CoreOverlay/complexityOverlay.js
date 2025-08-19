@@ -6,7 +6,7 @@ import { createComplexityVisualizer } from "../complexity-plot-engine/createComp
 
 
 export const showTheComplexityOverlay = async () => {
-    console.log('🦉 Creating overlay...');
+    // console.log('🦉 Creating overlay...');
     const extractedCode = extractSubmissionCode();
     const existingOverlay = document.querySelector('.bigowl-overlay');
     if (existingOverlay) existingOverlay.remove();
