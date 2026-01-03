@@ -1,0 +1,57 @@
+{
+  "../../../../../@crx/manifest": {
+    "file": "assets/crx-manifest.js-B_CgOOJu.js",
+    "name": "crx-manifest.js",
+    "src": "../../../../../@crx/manifest",
+    "isEntry": true
+  },
+  "src/assets/3dx-rotate.gif": {
+    "file": "assets/3dx-rotate-C7E5VsDd.gif",
+    "src": "src/assets/3dx-rotate.gif"
+  },
+  "src/assets/Big(O)wl.png": {
+    "file": "assets/Big(O)wl-CEAVfREB.png",
+    "src": "src/assets/Big(O)wl.png"
+  },
+  "src/assets/dev.jpg": {
+    "file": "assets/dev-CmGTeaBH.jpg",
+    "src": "src/assets/dev.jpg"
+  },
+  "src/assets/stars.svg": {
+    "file": "assets/stars-BUjPbZB7.svg",
+    "src": "src/assets/stars.svg"
+  },
+  "src/background/index.js": {
+    "file": "assets/index.js-Bxjs0id9.js",
+    "name": "index.js",
+    "src": "src/background/index.js",
+    "isEntry": true
+  },
+  "src/content/index.js": {
+    "file": "assets/index.js-DbggHWlM.js",
+    "name": "index.js",
+    "src": "src/content/index.js",
+    "isEntry": true
+  },
+  "src/content/leetcode-injector.js": {
+    "file": "assets/leetcode-injector.js-BGDJMR3r.js",
+    "name": "leetcode-injector.js",
+    "src": "src/content/leetcode-injector.js",
+    "isEntry": true
+  },
+  "src/popup/index.html": {
+    "file": "assets/index.html-BqwrAyXn.js",
+    "name": "index.html",
+    "src": "src/popup/index.html",
+    "isEntry": true,
+    "css": [
+      "assets/index-BP_he2oi.css"
+    ],
+    "assets": [
+      "assets/stars-BUjPbZB7.svg",
+      "assets/3dx-rotate-C7E5VsDd.gif",
+      "assets/Big(O)wl-CEAVfREB.png",
+      "assets/dev-CmGTeaBH.jpg"
+    ]
+  }
+}
